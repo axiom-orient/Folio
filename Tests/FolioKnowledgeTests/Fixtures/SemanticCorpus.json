@@ -1,0 +1,591 @@
+{
+  "version": 3,
+  "notes": [
+    {
+      "id": "cancel-en",
+      "title": "Stopping asynchronous work",
+      "text": "Concurrent operations respond to cancellation. Their saved progress remains available for recovery."
+    },
+    {
+      "id": "cancel-ko",
+      "title": "작업 중단과 기록 보존",
+      "text": "비동기 작업을 취소해도 이미 저장된 진행 기록과 편집 초안은 남는다. 실행 결과가 불확실하면 기록을 확인하고 같은 변경을 자동으로 반복하지 않는다."
+    },
+    {
+      "id": "coffee-en",
+      "title": "Making a morning drink",
+      "text": "Coffee is brewed by pouring hot water over roasted ground beans and filtering the resulting drink."
+    },
+    {
+      "id": "coffee-ko",
+      "title": "원두로 음료 만들기",
+      "text": "분쇄한 커피 원두에 뜨거운 물을 부어 우려낸 뒤 필터로 걸러 마신다. 물의 양과 추출 시간을 조절한다."
+    },
+    {
+      "id": "repair-en",
+      "title": "Fixing a household leak",
+      "text": "A plumber repairs leaking pipes and dripping taps in bathrooms and kitchens."
+    },
+    {
+      "id": "repair-ko",
+      "title": "욕실 배관 수리",
+      "text": "수도 설비 기술자는 욕실이나 부엌에서 새는 배관과 물이 떨어지는 수도꼭지를 수리한다."
+    },
+    {
+      "id": "sleep-en",
+      "title": "Rest and attention",
+      "text": "Getting sufficient sleep at night helps maintain concentration and attention during the following day."
+    },
+    {
+      "id": "sleep-ko",
+      "title": "밤의 휴식과 집중",
+      "text": "밤에 충분히 잠을 자면 다음 날 주의를 기울이고 집중하는 데 도움이 된다. 규칙적인 수면 시간을 유지한다."
+    },
+    {
+      "id": "river-en",
+      "title": "Land beside flowing water",
+      "text": "A river bank is the land at the edge of a flowing stream. People can walk beside the water and observe trees."
+    },
+    {
+      "id": "river-ko",
+      "title": "물길 옆 산책",
+      "text": "강둑은 강물이 흐르는 가장자리의 땅이다. 사람들은 물가를 따라 걸으며 나무와 새를 관찰한다."
+    },
+    {
+      "id": "bank-en",
+      "title": "Deposits and interest",
+      "text": "A bank keeps customers' money in deposit accounts and pays interest according to the account terms."
+    },
+    {
+      "id": "bank-ko",
+      "title": "예금과 이자",
+      "text": "은행은 고객이 맡긴 돈을 예금 계좌에 보관하고 약정한 조건에 따라 이자를 지급한다."
+    }
+  ],
+  "questions": [
+    {
+      "split": "development",
+      "query": "Parallel tasks stop when cancelled.",
+      "relevant": [
+        "cancel-en",
+        "cancel-ko"
+      ]
+    },
+    {
+      "split": "development",
+      "query": "How do I brew coffee?",
+      "relevant": [
+        "coffee-en",
+        "coffee-ko"
+      ]
+    },
+    {
+      "split": "development",
+      "query": "Who fixes a dripping tap?",
+      "relevant": [
+        "repair-en",
+        "repair-ko"
+      ]
+    },
+    {
+      "split": "development",
+      "query": "Why is sleeping enough important?",
+      "relevant": [
+        "sleep-en",
+        "sleep-ko"
+      ]
+    },
+    {
+      "split": "development",
+      "query": "Where can I deposit my savings?",
+      "relevant": [
+        "bank-en",
+        "bank-ko"
+      ]
+    },
+    {
+      "split": "development",
+      "query": "Walking alongside a waterway.",
+      "relevant": [
+        "river-en",
+        "river-ko"
+      ]
+    },
+    {
+      "split": "development",
+      "query": "Quantum entanglement experiments.",
+      "relevant": []
+    },
+    {
+      "split": "development",
+      "query": "Volcanic eruptions on Mars.",
+      "relevant": []
+    },
+    {
+      "split": "validation",
+      "query": "맡겨 둔 목돈에서 이자를 받는 곳",
+      "relevant": [
+        "bank-en",
+        "bank-ko"
+      ]
+    },
+    {
+      "split": "validation",
+      "query": "물 흐르는 곳의 가장자리를 걸어 다니기",
+      "relevant": [
+        "river-en",
+        "river-ko"
+      ]
+    },
+    {
+      "split": "validation",
+      "query": "물이 똑똑 떨어지는 욕실 설비를 고칠 사람",
+      "relevant": [
+        "repair-en",
+        "repair-ko"
+      ]
+    },
+    {
+      "split": "validation",
+      "query": "밤에 푹 쉬는 것이 다음날 주의력에 미치는 영향",
+      "relevant": [
+        "sleep-en",
+        "sleep-ko"
+      ]
+    },
+    {
+      "split": "validation",
+      "query": "실행 중인 일을 멈추면 저장해 둔 내용은 사라지나",
+      "relevant": [
+        "cancel-en",
+        "cancel-ko"
+      ]
+    },
+    {
+      "split": "validation",
+      "query": "볶은 콩 가루를 물로 우려 마시는 방법",
+      "relevant": [
+        "coffee-en",
+        "coffee-ko"
+      ]
+    },
+    {
+      "split": "validation",
+      "query": "Where should money be stored to earn interest?",
+      "relevant": [
+        "bank-en",
+        "bank-ko"
+      ]
+    },
+    {
+      "split": "validation",
+      "query": "Taking a stroll along the edge of a stream",
+      "relevant": [
+        "river-en",
+        "river-ko"
+      ]
+    },
+    {
+      "split": "validation",
+      "query": "A tradesperson to mend the kitchen water supply",
+      "relevant": [
+        "repair-en",
+        "repair-ko"
+      ]
+    },
+    {
+      "split": "validation",
+      "query": "Resting overnight to stay focused tomorrow",
+      "relevant": [
+        "sleep-en",
+        "sleep-ko"
+      ]
+    },
+    {
+      "split": "validation",
+      "query": "Do interrupted background jobs lose their stored progress?",
+      "relevant": [
+        "cancel-en",
+        "cancel-ko"
+      ]
+    },
+    {
+      "split": "validation",
+      "query": "Extracting a beverage from ground roasted beans",
+      "relevant": [
+        "coffee-en",
+        "coffee-ko"
+      ]
+    },
+    {
+      "split": "validation",
+      "query": "항성 내부 핵융합의 반응 속도",
+      "relevant": []
+    },
+    {
+      "split": "validation",
+      "query": "우주선의 화성 착륙 궤도를 계산하는 방법",
+      "relevant": []
+    },
+    {
+      "split": "validation",
+      "query": "공룡 화석에서 DNA를 복원하는 실험",
+      "relevant": []
+    },
+    {
+      "split": "validation",
+      "query": "바이올린 협주곡의 악보와 운지법",
+      "relevant": []
+    },
+    {
+      "split": "validation",
+      "query": "축구 월드컵 결승 경기의 점수",
+      "relevant": []
+    },
+    {
+      "split": "validation",
+      "query": "Fusion reactions inside a distant star",
+      "relevant": []
+    },
+    {
+      "split": "validation",
+      "query": "Recovering dinosaur genomes from fossil fragments",
+      "relevant": []
+    },
+    {
+      "split": "validation",
+      "query": "The fingering in a violin concerto score",
+      "relevant": []
+    },
+    {
+      "split": "validation",
+      "query": "What was the final World Cup match score?",
+      "relevant": []
+    },
+    {
+      "split": "validation",
+      "query": "Calculating a spacecraft trajectory to land on Mars",
+      "relevant": []
+    },
+    {
+      "split": "holdout",
+      "query": "저축한 자금을 맡기면 약정에 따라 돈을 더 받는 기관",
+      "relevant": [
+        "bank-ko",
+        "bank-en"
+      ]
+    },
+    {
+      "split": "holdout",
+      "query": "하천의 물가를 따라 천천히 산책하기",
+      "relevant": [
+        "river-ko",
+        "river-en"
+      ]
+    },
+    {
+      "split": "holdout",
+      "query": "부엌에서 물이 새는 관을 손봐 줄 직업",
+      "relevant": [
+        "repair-ko",
+        "repair-en"
+      ]
+    },
+    {
+      "split": "holdout",
+      "query": "충분한 야간 휴식이 이튿날 집중에 주는 도움",
+      "relevant": [
+        "sleep-ko",
+        "sleep-en"
+      ]
+    },
+    {
+      "split": "holdout",
+      "query": "취소된 비동기 처리의 저장된 진행 상태 확인",
+      "relevant": [
+        "cancel-ko",
+        "cancel-en"
+      ]
+    },
+    {
+      "split": "holdout",
+      "query": "가루로 간 볶은 원두를 뜨거운 물에 우려내기",
+      "relevant": [
+        "coffee-ko",
+        "coffee-en"
+      ]
+    },
+    {
+      "split": "holdout",
+      "query": "Keeping deposited funds in an account that earns interest",
+      "relevant": [
+        "bank-ko",
+        "bank-en"
+      ]
+    },
+    {
+      "split": "holdout",
+      "query": "Preserving saved progress when an asynchronous operation is interrupted",
+      "relevant": [
+        "cancel-ko",
+        "cancel-en"
+      ]
+    },
+    {
+      "split": "holdout",
+      "query": "은행나무의 학명과 수분 방식",
+      "relevant": []
+    },
+    {
+      "split": "holdout",
+      "query": "잠실 야구장의 개장 연도",
+      "relevant": []
+    },
+    {
+      "split": "holdout",
+      "query": "수리 군론에서 사용하는 대칭군 정의",
+      "relevant": []
+    },
+    {
+      "split": "holdout",
+      "query": "우주 배경 복사에서 관측한 온도 변동",
+      "relevant": []
+    },
+    {
+      "split": "holdout",
+      "query": "What is the Java virtual machine bytecode format?",
+      "relevant": []
+    },
+    {
+      "split": "holdout",
+      "query": "How do I draw a musical staff for a cello?",
+      "relevant": []
+    },
+    {
+      "split": "holdout",
+      "query": "Determine the eigenvalues of a square matrix",
+      "relevant": []
+    },
+    {
+      "split": "holdout",
+      "query": "Evidence for plate tectonics in ancient rocks",
+      "relevant": []
+    },
+    {
+      "split": "audit",
+      "query": "주전자에서 끓인 물과 종이 필터로 원두 가루의 향을 추출하기",
+      "relevant": [
+        "coffee-ko",
+        "coffee-en"
+      ]
+    },
+    {
+      "split": "audit",
+      "query": "세면대에서 물이 한 방울씩 떨어질 때 부를 전문가",
+      "relevant": [
+        "repair-ko",
+        "repair-en"
+      ]
+    },
+    {
+      "split": "audit",
+      "query": "통장에 넣어 둔 돈의 약정 수익",
+      "relevant": [
+        "bank-ko",
+        "bank-en"
+      ]
+    },
+    {
+      "split": "audit",
+      "query": "하천 가장자리 흙길에서 수목 관찰하기",
+      "relevant": [
+        "river-ko",
+        "river-en"
+      ]
+    },
+    {
+      "split": "audit",
+      "query": "전날 잠을 잘 자는 것과 이튿날의 집중",
+      "relevant": [
+        "sleep-ko",
+        "sleep-en"
+      ]
+    },
+    {
+      "split": "audit",
+      "query": "취소 신호를 받은 병렬 처리가 남긴 진행 기록",
+      "relevant": [
+        "cancel-ko",
+        "cancel-en"
+      ]
+    },
+    {
+      "split": "audit",
+      "query": "Filtering a drink extracted from ground beans with hot water",
+      "relevant": [
+        "coffee-ko",
+        "coffee-en"
+      ]
+    },
+    {
+      "split": "audit",
+      "query": "A professional for a bathroom tap that will not stop leaking",
+      "relevant": [
+        "repair-ko",
+        "repair-en"
+      ]
+    },
+    {
+      "split": "audit",
+      "query": "An institution that pays interest on money held for customers",
+      "relevant": [
+        "bank-ko",
+        "bank-en"
+      ]
+    },
+    {
+      "split": "audit",
+      "query": "Observing trees while following land at the edge of a stream",
+      "relevant": [
+        "river-ko",
+        "river-en"
+      ]
+    },
+    {
+      "split": "audit",
+      "query": "Can a full night of rest improve next-day focus?",
+      "relevant": [
+        "sleep-ko",
+        "sleep-en"
+      ]
+    },
+    {
+      "split": "audit",
+      "query": "What remains saved after a parallel operation is cancelled?",
+      "relevant": [
+        "cancel-ko",
+        "cancel-en"
+      ]
+    },
+    {
+      "split": "audit",
+      "query": "보존력이 있는 힘의 위치 에너지 적분",
+      "relevant": []
+    },
+    {
+      "split": "audit",
+      "query": "금속 나사의 피치와 체결 토크",
+      "relevant": []
+    },
+    {
+      "split": "audit",
+      "query": "조선 왕조의 왕위 계승 순서",
+      "relevant": []
+    },
+    {
+      "split": "audit",
+      "query": "유전자 편집 효소의 염기 인식",
+      "relevant": []
+    },
+    {
+      "split": "audit",
+      "query": "도자기 유약의 소성 온도",
+      "relevant": []
+    },
+    {
+      "split": "audit",
+      "query": "음성 인식 신경망의 학습 손실 함수",
+      "relevant": []
+    },
+    {
+      "split": "audit",
+      "query": "재즈 즉흥연주의 코드 진행",
+      "relevant": []
+    },
+    {
+      "split": "audit",
+      "query": "사막 선인장의 증산 작용",
+      "relevant": []
+    },
+    {
+      "split": "audit",
+      "query": "문장 성분 중 관형어와 부사어의 차이",
+      "relevant": []
+    },
+    {
+      "split": "audit",
+      "query": "양자 컴퓨터 오류 보정 부호",
+      "relevant": []
+    },
+    {
+      "split": "audit",
+      "query": "육상 100미터 세계 기록",
+      "relevant": []
+    },
+    {
+      "split": "audit",
+      "query": "삼각형의 외심을 구하는 기하학",
+      "relevant": []
+    },
+    {
+      "split": "audit",
+      "query": "How is a violin bow restrung?",
+      "relevant": []
+    },
+    {
+      "split": "audit",
+      "query": "How are galaxies classified by spiral arms?",
+      "relevant": []
+    },
+    {
+      "split": "audit",
+      "query": "Why do volcanic rocks contain crystals?",
+      "relevant": []
+    },
+    {
+      "split": "audit",
+      "query": "The grammar of relative clauses in Latin",
+      "relevant": []
+    },
+    {
+      "split": "audit",
+      "query": "How do I prove a statement by induction?",
+      "relevant": []
+    },
+    {
+      "split": "audit",
+      "query": "Predicting election outcomes from opinion polls",
+      "relevant": []
+    },
+    {
+      "split": "audit",
+      "query": "The tensile strength of a steel bridge cable",
+      "relevant": []
+    },
+    {
+      "split": "audit",
+      "query": "How does an encryption algorithm verify a signature?",
+      "relevant": []
+    },
+    {
+      "split": "audit",
+      "query": "Measuring an earthquake’s moment magnitude",
+      "relevant": []
+    },
+    {
+      "split": "audit",
+      "query": "The stages of a butterfly’s metamorphosis",
+      "relevant": []
+    },
+    {
+      "split": "audit",
+      "query": "The rules of an offside decision in football",
+      "relevant": []
+    },
+    {
+      "split": "audit",
+      "query": "How are traditional ceramic pigments manufactured?",
+      "relevant": []
+    }
+  ]
+}

@@ -1,0 +1,1367 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 71;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		149A05CC14097253100AB6DD /* Apps/Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = D4C242D5A57B70AE6D2F858A /* Apps/Assets.xcassets */; };
+		1B35511A48B3BAF9646C6525 /* FolioKnowledgeApple in Frameworks */ = {isa = PBXBuildFile; productRef = 42367575296EF3EE46E5030B /* FolioKnowledgeApple */; };
+		240641B527C53195B3995B10 /* FolioUI in Frameworks */ = {isa = PBXBuildFile; productRef = 6FEB6429CAA5A1186443441A /* FolioUI */; };
+		36BB09FE830A9AE100240DB7 /* FolioProvider in Frameworks */ = {isa = PBXBuildFile; productRef = C34BBC7A9668F5AEA21E1225 /* FolioProvider */; };
+		391AF1CB01D6021D4987AEED /* FolioKnowledge in Frameworks */ = {isa = PBXBuildFile; productRef = BD7E1C3282CCCEDB8D26E25F /* FolioKnowledge */; };
+		3E41B75D3D13109A38A7498E /* SpotlightIOS.appex in Embed Extensions */ = {isa = PBXBuildFile; fileRef = 1C738C7686F1F5907EC1973E /* SpotlightIOS.appex */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		43BC06F3F539F31A4DB4148A /* FolioUI in Frameworks */ = {isa = PBXBuildFile; productRef = 48DB8852D1DA241DB559CE3D /* FolioUI */; };
+		45E01D8A829340BCBAEEA9FF /* Extensions/SpotlightIndexHandler.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA2B5F2E7748563DBFF96C46 /* Extensions/SpotlightIndexHandler.swift */; };
+		469FF13C0AA06ED19C952BB8 /* Apps/FolioIOSApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4774C31F61266FAB7F3515DA /* Apps/FolioIOSApp.swift */; };
+		5FEAE082CC22DC803DD88D22 /* Extensions/SpotlightIndexHandler.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA2B5F2E7748563DBFF96C46 /* Extensions/SpotlightIndexHandler.swift */; };
+		736BF1659C2E7A5A491533EA /* FolioKnowledge in Frameworks */ = {isa = PBXBuildFile; productRef = BAB05862F9AFFD0F80519AFF /* FolioKnowledge */; };
+		8513140EBFC58A969325B422 /* MacApp/Sources/FolioMac/FolioMacApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = A9B2A275A13186B1C3392B93 /* MacApp/Sources/FolioMac/FolioMacApp.swift */; };
+		A0B04B58F6A508229869A6CB /* SpotlightMac.appex in Embed Extensions */ = {isa = PBXBuildFile; fileRef = CAD9A4AAD2503CF4ABCCBD91 /* SpotlightMac.appex */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		A8D06E256E1B43548F7B8E28 /* FolioKnowledgeApple in Frameworks */ = {isa = PBXBuildFile; productRef = F78C350C620D346618B2D67F /* FolioKnowledgeApple */; };
+		B216B694D3F9D398E3CE65AD /* Apps/Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = D4C242D5A57B70AE6D2F858A /* Apps/Assets.xcassets */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		62ADDC0871DC35DFD3543A50 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 244210E48437B6556980A702 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = B3D3E8A711E70C503EA67E3F;
+			remoteInfo = SpotlightMac;
+		};
+		CD9FF72A04F5769DDC525920 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 244210E48437B6556980A702 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = BFDD81148E401849EDCCA980;
+			remoteInfo = SpotlightIOS;
+		};
+		E2A8E58A30A0B1CA00751C2D /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 244210E48437B6556980A702 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = E83A7E3A4F0C73100749DD9B;
+			remoteInfo = FolioIOS;
+		};
+		E2A8E58C30A0B1D900751C2D /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 244210E48437B6556980A702 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 611088BCA70CA085A879882C;
+			remoteInfo = FolioMac;
+		};
+		E2E34473307E4F6B001E0861 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 244210E48437B6556980A702 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = E83A7E3A4F0C73100749DD9B;
+			remoteInfo = FolioIOS;
+		};
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXCopyFilesBuildPhase section */
+		8974CFEADEEB5807E2A3809F /* Embed Extensions */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 13;
+			files = (
+				3E41B75D3D13109A38A7498E /* SpotlightIOS.appex in Embed Extensions */,
+			);
+			name = "Embed Extensions";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		A11E325A6AC182890490DF35 /* Embed Extensions */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 13;
+			files = (
+				A0B04B58F6A508229869A6CB /* SpotlightMac.appex in Embed Extensions */,
+			);
+			name = "Embed Extensions";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXCopyFilesBuildPhase section */
+
+/* Begin PBXFileReference section */
+		1C738C7686F1F5907EC1973E /* SpotlightIOS.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = SpotlightIOS.appex; sourceTree = BUILT_PRODUCTS_DIR; };
+		4774C31F61266FAB7F3515DA /* Apps/FolioIOSApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Apps/FolioIOSApp.swift; sourceTree = "<group>"; };
+		A9B2A275A13186B1C3392B93 /* MacApp/Sources/FolioMac/FolioMacApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MacApp/Sources/FolioMac/FolioMacApp.swift; sourceTree = "<group>"; };
+		CAD9A4AAD2503CF4ABCCBD91 /* SpotlightMac.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = SpotlightMac.appex; sourceTree = BUILT_PRODUCTS_DIR; };
+		CD1C9509E625986648C80C13 /* FolioIOS.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = FolioIOS.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		D4C242D5A57B70AE6D2F858A /* Apps/Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Apps/Assets.xcassets; sourceTree = "<group>"; };
+		E2BC834630A0A86D00CE7350 /* FolioRuntimeChecks.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = FolioRuntimeChecks.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		E2BC835630A0B0F100CE7350 /* FolioMacRuntimeChecks.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = FolioMacRuntimeChecks.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		E2E34475307E5145001E0861 /* FolioDeviceChecks.xctestplan */ = {isa = PBXFileReference; lastKnownFileType = text; path = FolioDeviceChecks.xctestplan; sourceTree = "<group>"; };
+		E2F5BB94307E4E0200AB4E24 /* FolioDeviceUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = FolioDeviceUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		EBF735B69FB63FCC2FA396C6 /* FolioMac.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = FolioMac.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		FA2B5F2E7748563DBFF96C46 /* Extensions/SpotlightIndexHandler.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Extensions/SpotlightIndexHandler.swift; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXFileSystemSynchronizedRootGroup section */
+		E2BC834730A0A86E00CE7350 /* FolioRuntimeChecks */ = {isa = PBXFileSystemSynchronizedRootGroup; explicitFileTypes = {}; explicitFolders = (); path = FolioRuntimeChecks; sourceTree = "<group>"; };
+		E2BC835730A0B0F100CE7350 /* FolioMacRuntimeChecks */ = {isa = PBXFileSystemSynchronizedRootGroup; explicitFileTypes = {}; explicitFolders = (); path = FolioMacRuntimeChecks; sourceTree = "<group>"; };
+		E2F5BB95307E4E0200AB4E24 /* FolioDeviceUITests */ = {isa = PBXFileSystemSynchronizedRootGroup; explicitFileTypes = {}; explicitFolders = (); path = FolioDeviceUITests; sourceTree = "<group>"; };
+/* End PBXFileSystemSynchronizedRootGroup section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		32C4BF82D215EBB620B8C5C2 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				43BC06F3F539F31A4DB4148A /* FolioUI in Frameworks */,
+				36BB09FE830A9AE100240DB7 /* FolioProvider in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		33B33CC584A7606389244420 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				736BF1659C2E7A5A491533EA /* FolioKnowledge in Frameworks */,
+				A8D06E256E1B43548F7B8E28 /* FolioKnowledgeApple in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		A604D77014F2768AF9320762 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				391AF1CB01D6021D4987AEED /* FolioKnowledge in Frameworks */,
+				1B35511A48B3BAF9646C6525 /* FolioKnowledgeApple in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		CE0F1A1C279A73A432751BAE /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				240641B527C53195B3995B10 /* FolioUI in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		E2BC834330A0A86D00CE7350 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		E2BC835330A0B0F100CE7350 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		E2F5BB91307E4E0200AB4E24 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		B9E7F2871A3402983868AFC8 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				EBF735B69FB63FCC2FA396C6 /* FolioMac.app */,
+				CD1C9509E625986648C80C13 /* FolioIOS.app */,
+				CAD9A4AAD2503CF4ABCCBD91 /* SpotlightMac.appex */,
+				1C738C7686F1F5907EC1973E /* SpotlightIOS.appex */,
+				E2F5BB94307E4E0200AB4E24 /* FolioDeviceUITests.xctest */,
+				E2BC834630A0A86D00CE7350 /* FolioRuntimeChecks.xctest */,
+				E2BC835630A0B0F100CE7350 /* FolioMacRuntimeChecks.xctest */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		C69913C7EE4DFDD011BE172F = {
+			isa = PBXGroup;
+			children = (
+				E2E34475307E5145001E0861 /* FolioDeviceChecks.xctestplan */,
+				A9B2A275A13186B1C3392B93 /* MacApp/Sources/FolioMac/FolioMacApp.swift */,
+				4774C31F61266FAB7F3515DA /* Apps/FolioIOSApp.swift */,
+				FA2B5F2E7748563DBFF96C46 /* Extensions/SpotlightIndexHandler.swift */,
+				D4C242D5A57B70AE6D2F858A /* Apps/Assets.xcassets */,
+				E2F5BB95307E4E0200AB4E24 /* FolioDeviceUITests */,
+				E2BC834730A0A86E00CE7350 /* FolioRuntimeChecks */,
+				E2BC835730A0B0F100CE7350 /* FolioMacRuntimeChecks */,
+				B9E7F2871A3402983868AFC8 /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		611088BCA70CA085A879882C /* FolioMac */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = B36242173FCF1301BAF42C97 /* Build configuration list for PBXNativeTarget "FolioMac" */;
+			buildPhases = (
+				7FE21F3220845960FD7A9C54 /* Sources */,
+				32C4BF82D215EBB620B8C5C2 /* Frameworks */,
+				47CE8F7A3DA370FAE2CEEC80 /* Resources */,
+				A11E325A6AC182890490DF35 /* Embed Extensions */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				1FAE701B418AAB6B4FE62575 /* PBXTargetDependency */,
+			);
+			name = FolioMac;
+			packageProductDependencies = (
+				48DB8852D1DA241DB559CE3D /* FolioUI */,
+				C34BBC7A9668F5AEA21E1225 /* FolioProvider */,
+			);
+			productName = FolioMac;
+			productReference = EBF735B69FB63FCC2FA396C6 /* FolioMac.app */;
+			productType = "com.apple.product-type.application";
+		};
+		B3D3E8A711E70C503EA67E3F /* SpotlightMac */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = FDE2C43AEBEDBDF845C81102 /* Build configuration list for PBXNativeTarget "SpotlightMac" */;
+			buildPhases = (
+				37868CD5BBAFFDC592D37E2C /* Sources */,
+				33B33CC584A7606389244420 /* Frameworks */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = SpotlightMac;
+			packageProductDependencies = (
+				BAB05862F9AFFD0F80519AFF /* FolioKnowledge */,
+				F78C350C620D346618B2D67F /* FolioKnowledgeApple */,
+			);
+			productName = SpotlightMac;
+			productReference = CAD9A4AAD2503CF4ABCCBD91 /* SpotlightMac.appex */;
+			productType = "com.apple.product-type.app-extension";
+		};
+		BFDD81148E401849EDCCA980 /* SpotlightIOS */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = CD7DA2A36BEB962625FE7964 /* Build configuration list for PBXNativeTarget "SpotlightIOS" */;
+			buildPhases = (
+				99D40BCC4A837DE3ED41937E /* Sources */,
+				A604D77014F2768AF9320762 /* Frameworks */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = SpotlightIOS;
+			packageProductDependencies = (
+				BD7E1C3282CCCEDB8D26E25F /* FolioKnowledge */,
+				42367575296EF3EE46E5030B /* FolioKnowledgeApple */,
+			);
+			productName = SpotlightIOS;
+			productReference = 1C738C7686F1F5907EC1973E /* SpotlightIOS.appex */;
+			productType = "com.apple.product-type.app-extension";
+		};
+		E2BC834530A0A86D00CE7350 /* FolioRuntimeChecks */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = E2BC834A30A0A86E00CE7350 /* Build configuration list for PBXNativeTarget "FolioRuntimeChecks" */;
+			buildPhases = (
+				E2BC834230A0A86D00CE7350 /* Sources */,
+				E2BC834330A0A86D00CE7350 /* Frameworks */,
+				E2BC834430A0A86D00CE7350 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				E2A8E58B30A0B1CA00751C2D /* PBXTargetDependency */,
+			);
+			fileSystemSynchronizedGroups = (
+				E2BC834730A0A86E00CE7350 /* FolioRuntimeChecks */,
+			);
+			name = FolioRuntimeChecks;
+			packageProductDependencies = (
+			);
+			productName = FolioRuntimeChecks;
+			productReference = E2BC834630A0A86D00CE7350 /* FolioRuntimeChecks.xctest */;
+			productType = "com.apple.product-type.bundle.unit-test";
+		};
+		E2BC835530A0B0F100CE7350 /* FolioMacRuntimeChecks */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = E2BC835A30A0B0F100CE7350 /* Build configuration list for PBXNativeTarget "FolioMacRuntimeChecks" */;
+			buildPhases = (
+				E2BC835230A0B0F100CE7350 /* Sources */,
+				E2BC835330A0B0F100CE7350 /* Frameworks */,
+				E2BC835430A0B0F100CE7350 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				E2A8E58D30A0B1D900751C2D /* PBXTargetDependency */,
+			);
+			fileSystemSynchronizedGroups = (
+				E2BC835730A0B0F100CE7350 /* FolioMacRuntimeChecks */,
+			);
+			name = FolioMacRuntimeChecks;
+			packageProductDependencies = (
+			);
+			productName = FolioMacRuntimeChecks;
+			productReference = E2BC835630A0B0F100CE7350 /* FolioMacRuntimeChecks.xctest */;
+			productType = "com.apple.product-type.bundle.unit-test";
+		};
+		E2F5BB93307E4E0200AB4E24 /* FolioDeviceUITests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = E2F5BB98307E4E0200AB4E24 /* Build configuration list for PBXNativeTarget "FolioDeviceUITests" */;
+			buildPhases = (
+				E2F5BB90307E4E0200AB4E24 /* Sources */,
+				E2F5BB91307E4E0200AB4E24 /* Frameworks */,
+				E2F5BB92307E4E0200AB4E24 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				E2E34474307E4F6B001E0861 /* PBXTargetDependency */,
+			);
+			fileSystemSynchronizedGroups = (
+				E2F5BB95307E4E0200AB4E24 /* FolioDeviceUITests */,
+			);
+			name = FolioDeviceUITests;
+			packageProductDependencies = (
+			);
+			productName = FolioDeviceUITests;
+			productReference = E2F5BB94307E4E0200AB4E24 /* FolioDeviceUITests.xctest */;
+			productType = "com.apple.product-type.bundle.ui-testing";
+		};
+		E83A7E3A4F0C73100749DD9B /* FolioIOS */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = E61D9B11EDD1297B07613129 /* Build configuration list for PBXNativeTarget "FolioIOS" */;
+			buildPhases = (
+				FEE1DFF572BDAC31695BE6DC /* Sources */,
+				CE0F1A1C279A73A432751BAE /* Frameworks */,
+				56D46CA79A961CFEDB1FF0ED /* Resources */,
+				8974CFEADEEB5807E2A3809F /* Embed Extensions */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				9DCC6E744B63966C475F99B8 /* PBXTargetDependency */,
+			);
+			name = FolioIOS;
+			packageProductDependencies = (
+				6FEB6429CAA5A1186443441A /* FolioUI */,
+			);
+			productName = FolioIOS;
+			productReference = CD1C9509E625986648C80C13 /* FolioIOS.app */;
+			productType = "com.apple.product-type.application";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		244210E48437B6556980A702 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				LastSwiftUpdateCheck = 2720;
+				LastUpgradeCheck = 2700;
+				TargetAttributes = {
+					E2BC834530A0A86D00CE7350 = {
+						CreatedOnToolsVersion = 27.2;
+						TestTargetID = E83A7E3A4F0C73100749DD9B;
+					};
+					E2BC835530A0B0F100CE7350 = {
+						CreatedOnToolsVersion = 27.2;
+						TestTargetID = 611088BCA70CA085A879882C;
+					};
+					E2F5BB93307E4E0200AB4E24 = {
+						CreatedOnToolsVersion = 27.0;
+						TestTargetID = E83A7E3A4F0C73100749DD9B;
+					};
+				};
+			};
+			buildConfigurationList = 442D61E217DD044EA4245BF2 /* Build configuration list for PBXProject "Folio" */;
+			compatibilityVersion = "Xcode 16.0";
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				en,
+				Base,
+				ko,
+			);
+			mainGroup = C69913C7EE4DFDD011BE172F;
+			packageReferences = (
+				29F6F2C533C87DDD228742BD /* XCLocalSwiftPackageReference "." */,
+				0C2A3ED129DF73BA1071406D /* XCLocalSwiftPackageReference "MacIntegration" */,
+			);
+			productRefGroup = B9E7F2871A3402983868AFC8 /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				611088BCA70CA085A879882C /* FolioMac */,
+				E83A7E3A4F0C73100749DD9B /* FolioIOS */,
+				B3D3E8A711E70C503EA67E3F /* SpotlightMac */,
+				BFDD81148E401849EDCCA980 /* SpotlightIOS */,
+				E2F5BB93307E4E0200AB4E24 /* FolioDeviceUITests */,
+				E2BC834530A0A86D00CE7350 /* FolioRuntimeChecks */,
+				E2BC835530A0B0F100CE7350 /* FolioMacRuntimeChecks */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		47CE8F7A3DA370FAE2CEEC80 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				149A05CC14097253100AB6DD /* Apps/Assets.xcassets in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		56D46CA79A961CFEDB1FF0ED /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				B216B694D3F9D398E3CE65AD /* Apps/Assets.xcassets in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		E2BC834430A0A86D00CE7350 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		E2BC835430A0B0F100CE7350 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		E2F5BB92307E4E0200AB4E24 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		37868CD5BBAFFDC592D37E2C /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				5FEAE082CC22DC803DD88D22 /* Extensions/SpotlightIndexHandler.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		7FE21F3220845960FD7A9C54 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				8513140EBFC58A969325B422 /* MacApp/Sources/FolioMac/FolioMacApp.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		99D40BCC4A837DE3ED41937E /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				45E01D8A829340BCBAEEA9FF /* Extensions/SpotlightIndexHandler.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		E2BC834230A0A86D00CE7350 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		E2BC835230A0B0F100CE7350 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		E2F5BB90307E4E0200AB4E24 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		FEE1DFF572BDAC31695BE6DC /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				469FF13C0AA06ED19C952BB8 /* Apps/FolioIOSApp.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		1FAE701B418AAB6B4FE62575 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = B3D3E8A711E70C503EA67E3F /* SpotlightMac */;
+			targetProxy = 62ADDC0871DC35DFD3543A50 /* PBXContainerItemProxy */;
+		};
+		9DCC6E744B63966C475F99B8 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = BFDD81148E401849EDCCA980 /* SpotlightIOS */;
+			targetProxy = CD9FF72A04F5769DDC525920 /* PBXContainerItemProxy */;
+		};
+		E2A8E58B30A0B1CA00751C2D /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = E83A7E3A4F0C73100749DD9B /* FolioIOS */;
+			targetProxy = E2A8E58A30A0B1CA00751C2D /* PBXContainerItemProxy */;
+		};
+		E2A8E58D30A0B1D900751C2D /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 611088BCA70CA085A879882C /* FolioMac */;
+			targetProxy = E2A8E58C30A0B1D900751C2D /* PBXContainerItemProxy */;
+		};
+		E2E34474307E4F6B001E0861 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = E83A7E3A4F0C73100749DD9B /* FolioIOS */;
+			targetProxy = E2E34473307E4F6B001E0861 /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
+
+/* Begin XCBuildConfiguration section */
+		05002075C975FE6A8F85DDD9 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_ENTITLEMENTS = Apps/Mac.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				DEVELOPMENT_TEAM = 7WR76382QB;
+				ENABLE_APP_SANDBOX = YES;
+				ENABLE_INCOMING_NETWORK_CONNECTIONS = YES;
+				ENABLE_OUTGOING_NETWORK_CONNECTIONS = YES;
+				ENABLE_RESOURCE_ACCESS_AUDIO_INPUT = NO;
+				ENABLE_RESOURCE_ACCESS_BLUETOOTH = NO;
+				ENABLE_RESOURCE_ACCESS_CALENDARS = NO;
+				ENABLE_RESOURCE_ACCESS_CAMERA = NO;
+				ENABLE_RESOURCE_ACCESS_CONTACTS = NO;
+				ENABLE_RESOURCE_ACCESS_LOCATION = NO;
+				ENABLE_RESOURCE_ACCESS_PRINTING = NO;
+				ENABLE_RESOURCE_ACCESS_USB = NO;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = Apps/MacInfo.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+				);
+				MACOSX_DEPLOYMENT_TARGET = 27.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.axient.Folio;
+				PRODUCT_MODULE_NAME = FolioMac;
+				PRODUCT_NAME = FolioMac;
+				SDKROOT = macosx;
+				SUPPORTED_PLATFORMS = macosx;
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				SWIFT_STRICT_CONCURRENCY = complete;
+				SWIFT_VERSION = 6.0;
+			};
+			name = Debug;
+		};
+		24416C9AC881D66FF875A8BE /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				APPLICATION_EXTENSION_API_ONLY = YES;
+				CODE_SIGN_ENTITLEMENTS = Extensions/Spotlight.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				DEVELOPMENT_TEAM = 7WR76382QB;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = Extensions/Info.plist;
+				IPHONEOS_DEPLOYMENT_TARGET = 27.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.axient.Folio.Spotlight;
+				PRODUCT_MODULE_NAME = SpotlightIOS;
+				PRODUCT_NAME = SpotlightIOS;
+				SDKROOT = iphoneos;
+				SKIP_INSTALL = YES;
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SUPPORTS_MACCATALYST = NO;
+				SWIFT_OPTIMIZATION_LEVEL = "-O";
+				SWIFT_STRICT_CONCURRENCY = complete;
+				SWIFT_VERSION = 6.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
+		35B1014F135DE9B45529B733 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CLANG_ENABLE_MODULES = YES;
+			};
+			name = Release;
+		};
+		35E2AEAD6B05D560606ACD8D /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				APPLICATION_EXTENSION_API_ONLY = YES;
+				CODE_SIGN_ENTITLEMENTS = Extensions/SpotlightMac.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				DEVELOPMENT_TEAM = 7WR76382QB;
+				ENABLE_APP_SANDBOX = YES;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = Extensions/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+				);
+				MACOSX_DEPLOYMENT_TARGET = 27.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.axient.Folio.Spotlight;
+				PRODUCT_MODULE_NAME = SpotlightMac;
+				PRODUCT_NAME = SpotlightMac;
+				SDKROOT = macosx;
+				SKIP_INSTALL = YES;
+				SUPPORTED_PLATFORMS = macosx;
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				SWIFT_STRICT_CONCURRENCY = complete;
+				SWIFT_VERSION = 6.0;
+			};
+			name = Debug;
+		};
+		4223118E347EDFE88A8B2694 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				APPLICATION_EXTENSION_API_ONLY = YES;
+				CODE_SIGN_ENTITLEMENTS = Extensions/SpotlightMac.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				DEVELOPMENT_TEAM = 7WR76382QB;
+				ENABLE_APP_SANDBOX = YES;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = Extensions/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+				);
+				MACOSX_DEPLOYMENT_TARGET = 27.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.axient.Folio.Spotlight;
+				PRODUCT_MODULE_NAME = SpotlightMac;
+				PRODUCT_NAME = SpotlightMac;
+				SDKROOT = macosx;
+				SKIP_INSTALL = YES;
+				SUPPORTED_PLATFORMS = macosx;
+				SWIFT_OPTIMIZATION_LEVEL = "-O";
+				SWIFT_STRICT_CONCURRENCY = complete;
+				SWIFT_VERSION = 6.0;
+			};
+			name = Release;
+		};
+		488864B3D19480A82F7F1786 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CLANG_ENABLE_MODULES = YES;
+			};
+			name = Debug;
+		};
+		61F1E78AACCF925F42ACF109 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_ENTITLEMENTS = Apps/Folio.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				DEVELOPMENT_TEAM = 7WR76382QB;
+				FOLIO_IOS_INFO_PLIST = Apps/IOSInfo.plist;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = "$(FOLIO_IOS_INFO_PLIST)";
+				IPHONEOS_DEPLOYMENT_TARGET = 27.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.axient.Folio;
+				PRODUCT_MODULE_NAME = FolioIOS;
+				PRODUCT_NAME = FolioIOS;
+				SDKROOT = iphoneos;
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SUPPORTS_MACCATALYST = NO;
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				SWIFT_STRICT_CONCURRENCY = complete;
+				SWIFT_VERSION = 6.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		704457B509400326D6622907 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				APPLICATION_EXTENSION_API_ONLY = YES;
+				CODE_SIGN_ENTITLEMENTS = Extensions/Spotlight.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				DEVELOPMENT_TEAM = 7WR76382QB;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = Extensions/Info.plist;
+				IPHONEOS_DEPLOYMENT_TARGET = 27.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.axient.Folio.Spotlight;
+				PRODUCT_MODULE_NAME = SpotlightIOS;
+				PRODUCT_NAME = SpotlightIOS;
+				SDKROOT = iphoneos;
+				SKIP_INSTALL = YES;
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SUPPORTS_MACCATALYST = NO;
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				SWIFT_STRICT_CONCURRENCY = complete;
+				SWIFT_VERSION = 6.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		C40B7EA206C613F1DF6E7D4E /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_ENTITLEMENTS = Apps/Folio.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				DEVELOPMENT_TEAM = 7WR76382QB;
+				FOLIO_IOS_INFO_PLIST = Apps/IOSInfo.plist;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = "$(FOLIO_IOS_INFO_PLIST)";
+				IPHONEOS_DEPLOYMENT_TARGET = 27.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.axient.Folio;
+				PRODUCT_MODULE_NAME = FolioIOS;
+				PRODUCT_NAME = FolioIOS;
+				SDKROOT = iphoneos;
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SUPPORTS_MACCATALYST = NO;
+				SWIFT_OPTIMIZATION_LEVEL = "-O";
+				SWIFT_STRICT_CONCURRENCY = complete;
+				SWIFT_VERSION = 6.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
+		E2BC834B30A0A86E00CE7350 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				CODE_SIGN_STYLE = Automatic;
+				COPY_PHASE_STRIP = NO;
+				CURRENT_PROJECT_VERSION = 1;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				DEVELOPMENT_TEAM = 7WR76382QB;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu17;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 27.0;
+				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
+				MACOSX_DEPLOYMENT_TARGET = 27.0;
+				MARKETING_VERSION = 1.0;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				PRODUCT_BUNDLE_IDENTIFIER = com.axient.FolioRuntimeChecks;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = auto;
+				STRING_CATALOG_GENERATE_SYMBOLS = NO;
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "DEBUG $(inherited)";
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 6.0;
+				TARGETED_DEVICE_FAMILY = "1,2,7";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/FolioIOS.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/FolioIOS";
+				XROS_DEPLOYMENT_TARGET = 27.2;
+			};
+			name = Debug;
+		};
+		E2BC834C30A0A86E00CE7350 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				CODE_SIGN_STYLE = Automatic;
+				COPY_PHASE_STRIP = NO;
+				CURRENT_PROJECT_VERSION = 1;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				DEVELOPMENT_TEAM = 7WR76382QB;
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu17;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 27.0;
+				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
+				MACOSX_DEPLOYMENT_TARGET = 27.0;
+				MARKETING_VERSION = 1.0;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				MTL_FAST_MATH = YES;
+				PRODUCT_BUNDLE_IDENTIFIER = com.axient.FolioRuntimeChecks;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = auto;
+				STRING_CATALOG_GENERATE_SYMBOLS = NO;
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_COMPILATION_MODE = wholemodule;
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 6.0;
+				TARGETED_DEVICE_FAMILY = "1,2,7";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/FolioIOS.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/FolioIOS";
+				XROS_DEPLOYMENT_TARGET = 27.2;
+			};
+			name = Release;
+		};
+		E2BC835B30A0B0F100CE7350 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				CODE_SIGN_STYLE = Automatic;
+				COPY_PHASE_STRIP = NO;
+				CURRENT_PROJECT_VERSION = 1;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				DEVELOPMENT_TEAM = 7WR76382QB;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu17;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 27.2;
+				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
+				MACOSX_DEPLOYMENT_TARGET = 27.0;
+				MARKETING_VERSION = 1.0;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				PRODUCT_BUNDLE_IDENTIFIER = com.axient.FolioMacRuntimeChecks;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = auto;
+				STRING_CATALOG_GENERATE_SYMBOLS = NO;
+				SUPPORTED_PLATFORMS = macosx;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "DEBUG $(inherited)";
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 6.0;
+				TARGETED_DEVICE_FAMILY = "1,2,7";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/FolioMac.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/FolioMac";
+				XROS_DEPLOYMENT_TARGET = 27.2;
+			};
+			name = Debug;
+		};
+		E2BC835C30A0B0F100CE7350 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				CODE_SIGN_STYLE = Automatic;
+				COPY_PHASE_STRIP = NO;
+				CURRENT_PROJECT_VERSION = 1;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				DEVELOPMENT_TEAM = 7WR76382QB;
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu17;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 27.2;
+				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
+				MACOSX_DEPLOYMENT_TARGET = 27.0;
+				MARKETING_VERSION = 1.0;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				MTL_FAST_MATH = YES;
+				PRODUCT_BUNDLE_IDENTIFIER = com.axient.FolioMacRuntimeChecks;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = auto;
+				STRING_CATALOG_GENERATE_SYMBOLS = NO;
+				SUPPORTED_PLATFORMS = macosx;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_COMPILATION_MODE = wholemodule;
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 6.0;
+				TARGETED_DEVICE_FAMILY = "1,2,7";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/FolioMac.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/FolioMac";
+				XROS_DEPLOYMENT_TARGET = 27.2;
+			};
+			name = Release;
+		};
+		E2F5BB99307E4E0200AB4E24 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				CODE_SIGN_STYLE = Automatic;
+				COPY_PHASE_STRIP = NO;
+				CURRENT_PROJECT_VERSION = 1;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				DEVELOPMENT_TEAM = 7WR76382QB;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu17;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 27.0;
+				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
+				MACOSX_DEPLOYMENT_TARGET = 27.0;
+				MARKETING_VERSION = 1.0;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				PRODUCT_BUNDLE_IDENTIFIER = com.axient.FolioDeviceUITests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				STRING_CATALOG_GENERATE_SYMBOLS = NO;
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "DEBUG $(inherited)";
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 6.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_TARGET_NAME = FolioIOS;
+				XROS_DEPLOYMENT_TARGET = 27.0;
+			};
+			name = Debug;
+		};
+		E2F5BB9A307E4E0200AB4E24 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				CODE_SIGN_STYLE = Automatic;
+				COPY_PHASE_STRIP = NO;
+				CURRENT_PROJECT_VERSION = 1;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				DEVELOPMENT_TEAM = 7WR76382QB;
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu17;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 27.0;
+				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
+				MACOSX_DEPLOYMENT_TARGET = 27.0;
+				MARKETING_VERSION = 1.0;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				MTL_FAST_MATH = YES;
+				PRODUCT_BUNDLE_IDENTIFIER = com.axient.FolioDeviceUITests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				STRING_CATALOG_GENERATE_SYMBOLS = NO;
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_COMPILATION_MODE = wholemodule;
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 6.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_TARGET_NAME = FolioIOS;
+				XROS_DEPLOYMENT_TARGET = 27.0;
+			};
+			name = Release;
+		};
+		E561BA6D647E0D55209403BF /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_ENTITLEMENTS = Apps/Mac.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				DEVELOPMENT_TEAM = 7WR76382QB;
+				ENABLE_APP_SANDBOX = YES;
+				ENABLE_INCOMING_NETWORK_CONNECTIONS = YES;
+				ENABLE_OUTGOING_NETWORK_CONNECTIONS = YES;
+				ENABLE_RESOURCE_ACCESS_AUDIO_INPUT = NO;
+				ENABLE_RESOURCE_ACCESS_BLUETOOTH = NO;
+				ENABLE_RESOURCE_ACCESS_CALENDARS = NO;
+				ENABLE_RESOURCE_ACCESS_CAMERA = NO;
+				ENABLE_RESOURCE_ACCESS_CONTACTS = NO;
+				ENABLE_RESOURCE_ACCESS_LOCATION = NO;
+				ENABLE_RESOURCE_ACCESS_PRINTING = NO;
+				ENABLE_RESOURCE_ACCESS_USB = NO;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = Apps/MacInfo.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+				);
+				MACOSX_DEPLOYMENT_TARGET = 27.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.axient.Folio;
+				PRODUCT_MODULE_NAME = FolioMac;
+				PRODUCT_NAME = FolioMac;
+				SDKROOT = macosx;
+				SUPPORTED_PLATFORMS = macosx;
+				SWIFT_OPTIMIZATION_LEVEL = "-O";
+				SWIFT_STRICT_CONCURRENCY = complete;
+				SWIFT_VERSION = 6.0;
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		442D61E217DD044EA4245BF2 /* Build configuration list for PBXProject "Folio" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				488864B3D19480A82F7F1786 /* Debug */,
+				35B1014F135DE9B45529B733 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		B36242173FCF1301BAF42C97 /* Build configuration list for PBXNativeTarget "FolioMac" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				05002075C975FE6A8F85DDD9 /* Debug */,
+				E561BA6D647E0D55209403BF /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		CD7DA2A36BEB962625FE7964 /* Build configuration list for PBXNativeTarget "SpotlightIOS" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				704457B509400326D6622907 /* Debug */,
+				24416C9AC881D66FF875A8BE /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		E2BC834A30A0A86E00CE7350 /* Build configuration list for PBXNativeTarget "FolioRuntimeChecks" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				E2BC834B30A0A86E00CE7350 /* Debug */,
+				E2BC834C30A0A86E00CE7350 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		E2BC835A30A0B0F100CE7350 /* Build configuration list for PBXNativeTarget "FolioMacRuntimeChecks" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				E2BC835B30A0B0F100CE7350 /* Debug */,
+				E2BC835C30A0B0F100CE7350 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		E2F5BB98307E4E0200AB4E24 /* Build configuration list for PBXNativeTarget "FolioDeviceUITests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				E2F5BB99307E4E0200AB4E24 /* Debug */,
+				E2F5BB9A307E4E0200AB4E24 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		E61D9B11EDD1297B07613129 /* Build configuration list for PBXNativeTarget "FolioIOS" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				61F1E78AACCF925F42ACF109 /* Debug */,
+				C40B7EA206C613F1DF6E7D4E /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		FDE2C43AEBEDBDF845C81102 /* Build configuration list for PBXNativeTarget "SpotlightMac" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				35E2AEAD6B05D560606ACD8D /* Debug */,
+				4223118E347EDFE88A8B2694 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+/* End XCConfigurationList section */
+
+/* Begin XCLocalSwiftPackageReference section */
+		0C2A3ED129DF73BA1071406D /* XCLocalSwiftPackageReference "MacIntegration" */ = {
+			isa = XCLocalSwiftPackageReference;
+			relativePath = MacIntegration;
+		};
+		29F6F2C533C87DDD228742BD /* XCLocalSwiftPackageReference "." */ = {
+			isa = XCLocalSwiftPackageReference;
+			relativePath = .;
+		};
+/* End XCLocalSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		42367575296EF3EE46E5030B /* FolioKnowledgeApple */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 29F6F2C533C87DDD228742BD /* XCLocalSwiftPackageReference "." */;
+			productName = FolioKnowledgeApple;
+		};
+		48DB8852D1DA241DB559CE3D /* FolioUI */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 29F6F2C533C87DDD228742BD /* XCLocalSwiftPackageReference "." */;
+			productName = FolioUI;
+		};
+		6FEB6429CAA5A1186443441A /* FolioUI */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 29F6F2C533C87DDD228742BD /* XCLocalSwiftPackageReference "." */;
+			productName = FolioUI;
+		};
+		BAB05862F9AFFD0F80519AFF /* FolioKnowledge */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 29F6F2C533C87DDD228742BD /* XCLocalSwiftPackageReference "." */;
+			productName = FolioKnowledge;
+		};
+		BD7E1C3282CCCEDB8D26E25F /* FolioKnowledge */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 29F6F2C533C87DDD228742BD /* XCLocalSwiftPackageReference "." */;
+			productName = FolioKnowledge;
+		};
+		C34BBC7A9668F5AEA21E1225 /* FolioProvider */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 0C2A3ED129DF73BA1071406D /* XCLocalSwiftPackageReference "MacIntegration" */;
+			productName = FolioProvider;
+		};
+		F78C350C620D346618B2D67F /* FolioKnowledgeApple */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 29F6F2C533C87DDD228742BD /* XCLocalSwiftPackageReference "." */;
+			productName = FolioKnowledgeApple;
+		};
+/* End XCSwiftPackageProductDependency section */
+	};
+	rootObject = 244210E48437B6556980A702 /* Project object */;
+}

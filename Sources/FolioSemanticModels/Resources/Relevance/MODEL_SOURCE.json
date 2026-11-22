@@ -1,0 +1,17 @@
+{
+  "upstream": "cross-encoder/mmarco-mMiniLMv2-L12-H384-v1",
+  "upstreamRevision": "1427fd652930e4ba29e8149678df786c240d8825",
+  "conversion": "isidorus-ai/mmarco-mMiniLMv2-L12-H384-v1",
+  "conversionRevision": "5a9d13a7359c70b5a6b4c90810b65536b2ac470e",
+  "license": "Apache-2.0",
+  "verifiedZipSHA256": "7d098be59e39b4544547f158518bb1c4abaf83ae800e2f791eea5f023aab7146",
+  "actualOutput": "var_935 float32 [1,1], differs from conversion card name logits",
+  "files": {
+    "LICENSE.txt": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30",
+    "reranker.mlpackage/Data/com.apple.CoreML/model.mlmodel": "3238d93dfd1cf08908ddfccd600c8f66ad2712addd9ebbcf58c589bfe4014dfc",
+    "reranker.mlpackage/Data/com.apple.CoreML/weights/weight.bin": "d61da15c4f95857ec3523ae1b7bacd82fdb7e14a0b9c3a447734af177878b3ad",
+    "reranker.mlpackage/Manifest.json": "07e51b121fe484524698fff9b737693eaccd51a5a7717d895ed24fdad9309a30",
+    "tokenizer.json": "62c24cdc13d4c9952d63718d6c9fa4c287974249e16b7ade6d5a85e7bbb75626",
+    "tokenizer_config.json": "e7fbfbfa6347b4e414c1cee50d142e2c2f9a895dad68b068ae83a8b564c3837e"
+  }
+}

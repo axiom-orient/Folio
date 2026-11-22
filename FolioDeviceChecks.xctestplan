@@ -1,0 +1,30 @@
+{
+  "configurations": [
+    {
+      "id": "89C40417-2C45-468F-82E2-F81078B579E3",
+      "name": "Test Scheme Action",
+      "options": {}
+    }
+  ],
+  "defaultOptions": {
+    "codeCoverage": false,
+    "performanceAntipatternCheckerEnabled": false,
+    "targetForVariableExpansion": {
+      "containerPath": "container:Folio.xcodeproj",
+      "identifier": "E83A7E3A4F0C73100749DD9B",
+      "name": "FolioIOS"
+    },
+    "testInteropMode": "complete"
+  },
+  "testTargets": [
+    {
+      "target": {
+        "containerPath": "container:Folio.xcodeproj",
+        "identifier": "E2F5BB93307E4E0200AB4E24",
+        "name": "FolioDeviceUITests"
+      },
+      "parallelizable": false
+    }
+  ],
+  "version": 1
+}

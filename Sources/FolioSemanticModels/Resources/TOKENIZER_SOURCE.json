@@ -1,0 +1,15 @@
+{
+  "format": "folio.scalar-unigram/1",
+  "compiler": "Tools/SemanticAssets/compile_tokenizer.py",
+  "algorithmSource": "huggingface/swift-transformers@1.4.0",
+  "inputs": {
+    "tokenizer.json": "cd98e5698b201ba914efb8c18b6709fa8735ab71dcad8d2b431e52e8bf68d932",
+    "Relevance/tokenizer.json": "62c24cdc13d4c9952d63718d6c9fa4c287974249e16b7ade6d5a85e7bbb75626"
+  },
+  "nodes": 505199,
+  "vocabulary": 250002,
+  "files": {
+    "Unigram.foliotokens": "00eea28d2c488d08180f90ee1f694a188b01c42e3c087a35d827879b71260e5b",
+    "Precompiled.charsmap": "0942789e0111452f1cc446f70036e26d24458c3c7858c53cc12ca4d87531279b"
+  }
+}

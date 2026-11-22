@@ -1,0 +1,17 @@
+.build/
+.DS_Store
+.swiftpm/
+build/
+*.xcuserstate
+xcuserdata/
+
+# Local research sources, captures, and device verification records.
+/docs/Design/
+/docs/Verification/
+/docs/History/
+/docs/Research/
+/docs/IMPLEMENTATION_STATUS.md
+/docs/PROJECTVAULT_USAGE.md
+/docs/ICLOUD_USAGE.md
+/docs/NATIVEAGENT_KNOWLEDGE_COMPARISON.md
+/docs/SOURCE_SHA256*.json

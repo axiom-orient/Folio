@@ -1,0 +1,55 @@
+{
+  "captured": "2026-10-29",
+  "kind": "local working-tree snapshot",
+  "source": "Acornry local working tree",
+  "files": {
+    "LICENSE": "712a9995c3ed773135bfca592fe54a3327d0897b52be0c7e77ef171b9980a5b0",
+    "Sources/Acornry/AcornryApprovalRegistry.swift": "e77a6c97ee11c924385f47c22a2cf73017b01fa5e359ce24ef8ecdd580b97732",
+    "Sources/Acornry/AcornryConfiguration.swift": "c616052ab32739d39f1c8b5ec5388c926ff127a3d30f7e400ca933a2636f0792",
+    "Sources/Acornry/AcornryDeadline.swift": "563c829ec30f73d573a6fca11f7a290d3f892f3696402ff473239b61a3fc16cf",
+    "Sources/Acornry/AcornryError.swift": "6e820d209329011e27a5b88e82883519cf80fcdfcc2f744b1b4ebcc8985adb4a",
+    "Sources/Acornry/AcornryFileStore.swift": "56c5b4230dd47573139e0c9400659a386d8fc6aa3ece0221cacc4f6e17f6ae25",
+    "Sources/Acornry/AcornryManifest.swift": "3d43add64d32aa3e1675eefae6ded09ee8080f748fe1a96f7446664ef2dda4a9",
+    "Sources/Acornry/AcornryNearby.swift": "a6bfb1027d707e5ee2ddbcf3c4d277a313df170622c5e81c863d96804d1a73d4",
+    "Sources/Acornry/AcornryOperationJournal.swift": "bcd2d6ba8c975cd64246f5b4dcd76bf6cdb0cec57df8529bac449a01d82e97f9",
+    "Sources/Acornry/AcornryPath.swift": "6b07e43acd2536198faf3165e89a46ff77522567eaa0ac8a6b1058820ba2f459",
+    "Sources/Acornry/AcornryPersistence.swift": "90778ce4e84ce155452ea1faf83c88f245d33a5cf44f907ce8be7bddc2f2d197",
+    "Sources/Acornry/AcornryReceipt.swift": "fc462d98edb22141d1dba1c6768d47ed72c61674e52aca1d1914b1a9be801761",
+    "Sources/Acornry/AcornryReceiveStore.swift": "7c2b13793a29ffb68cc9deca5f24c606a73e8be1988563f67bc4dda70b51a8ba",
+    "Sources/Acornry/AcornryRootLease.swift": "063021ea7400ed6ddf314c501e268dfc796eaecf9bcb6128171989afc9b63011",
+    "Sources/Acornry/AcornrySHA256.swift": "6ee526ef3e9aedaa88f8fb1861289eef3630ef25472ba3e3fc2e125c169ec0dc",
+    "Sources/Acornry/AcornryState.swift": "023e5d0e14041a801fb0a09b821bf750e87d758ebdf9b1568d8f0f6c122d8460",
+    "Sources/Acornry/AcornryTypes.swift": "ccb4f5b219a9c5849c7ff5a3d01a82ec574d7dfd89f65f4208cb5d2477c887c1",
+    "Sources/Acornry/AcornryWire.swift": "551eec29a9f603dfd3f74acb5e12f66a2a9d384cba7a0578d58680f1bafe519c",
+    "Sources/Acornry/Transport/AcornryApplePeerTransport.swift": "15792d644c087b8131a927b3332ea378b946b4f4bb8507aed8fcd1852d0f9366",
+    "Sources/Acornry/Transport/AcornryByteConnection.swift": "7c77bd96f7d8de9ce613b18d931d4cc4ca02f7382dcd867ff1b16af4c9be4eda",
+    "Sources/Acornry/Transport/AcornryTransport.swift": "546fa39668c5453d06fe78b15111235a0c7278fb8e64ef92d4f1d251bd2975fe",
+    "Sources/Acornry/Transport/AcornryWiFiAwareTransport.swift": "39ad7bc5f6ac8b1d3be375bf96717f7c8971757d6313e29a1ae5f0b3974af525",
+    "THIRD_PARTY_NOTICES.md": "e7370c2c563e4754ed0e4b901290d2b9d91af9ac43db018d17f3672f4fe0d4bc"
+  },
+  "adaptations": {
+    "reason": "Package-private module identities are namespaced for SDK consumers; declarations and writer behavior are preserved. Nearby delegates approval exchange and progress transitions to internal helpers; derived configuration values and identical payload validation are consolidated. Source publication, wire data, actor task ownership and recovery contracts are preserved. Stopping also drains offline import/archive reservations, and their admission waits for the stop registration to retire. Read-only receive inventories expose retained finalized staging and actual unpublished destination occupancy; explicit retries revalidate bounded metadata and payload digests with the same transfer identity. Wire and persisted record formats are unchanged. Outgoing and incoming protocol sessions now execute within the facade-owned reservations and inherited actor isolation; lifecycle, handshake identity, observation state, dispatch uncertainty and receipt/cleanup ordering retain their existing owners and contracts. A package-only ordered observation stream republishes existing events with a receive-release revision, including at subscription and after release, so buffered hint loss cannot hide storage invalidation; application inventory reads reject older results, and public event cases and receipt delivery order remain unchanged.",
+    "moduleNames": {
+      "KnowledgeKit": "FolioKnowledge",
+      "KnowledgeKitApple": "FolioKnowledgeApple",
+      "KnowledgeKitSQLite": "FolioKnowledgeSQLite",
+      "Acornry": "FolioNearbyTransport"
+    },
+    "modifiedFiles": {
+      "Sources/Acornry/AcornryFileStore.swift": "08617c0f07d878e132d31408e7be9198166aa4575d5ec4d2ac6896f01a06623b",
+      "Sources/Acornry/AcornryProgressLedger.swift": "0f2f908ccd285cd28a6ce646c5bdc9d3308270508973f418afe960b024727e5e",
+      "Sources/Acornry/AcornryApprovalExchange.swift": "718737b139b081235ccca64fee08912f4fbc82412584aac6f51e86b074409d6b",
+      "Sources/Acornry/AcornryReceiveStore.swift": "591ed19a8b8ad7f0363b9390fc67d8ef7b4e8eb9518505bde4dba3837e25aca7",
+      "Sources/Acornry/AcornryNearby.swift": "077acc1c7d4ba15620ffd041127738834106c9068536d744c5b803810016a067",
+      "Sources/Acornry/AcornryConfiguration.swift": "c8c7523898e9b1cffd55f1b3f9b3b4565c328f7ffd194f6e53e1277eca71db1c",
+      "Sources/Acornry/AcornryPath.swift": "009ece9f2c7bbe4e61f3678e326ee3b815d530d1877c438c8348afffc2979007",
+      "Sources/Acornry/Transport/AcornryApplePeerTransport.swift": "c9973c86e6c380bb25607ff9c4588cb5d18af089ac6360e74b59ad7a41b20b72",
+      "Sources/Acornry/AcornryPendingImport.swift": "bef9141b87c4f22b64846b3711bd6f4568a0738f9cf1f7a12c5520a91d5c4180",
+      "Sources/Acornry/AcornryReceiveInventory.swift": "a9666c79de417e73912bf92b04e0100918c46297f6c2a074777f99827e6211b6",
+      "Sources/Acornry/AcornryOutgoingTransferSession.swift": "574d49aee50a31f8050a287aa7f8d4491503c86174ffb542c2d91c16c0001d05",
+      "Sources/Acornry/AcornryIncomingTransferSession.swift": "7ecd6df9fb34cd77d679f7d04201df0560964c7aa005b9f511bc9b11554f0a2e",
+      "Sources/Acornry/AcornryTransferSessionEvent.swift": "df6e388128ee9c67ea2577f1b34b0edeacf5bee2c674a5f5a7d8de7a9a64fe7a",
+      "Sources/Acornry/AcornryNearbyObservation.swift": "1fcb3ae299c8e09799a6967ed85dc9b43e73c386ee8bde978d668ec599570ae5"
+    }
+  }
+}
