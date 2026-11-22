@@ -8,10 +8,7 @@ struct FolioMacApp: App {
   @NSApplicationDelegateAdaptor(WikiMacDelegate.self) private var delegate
   @State private var model: WikiAppModel
   init() {
-    let connection = WikiMacConnection()
-    let model = WikiAppModel(connectProvider: { service, status in
-      await connection.connect(service: service, status: status)
-    }, disconnectProvider: { await connection.disconnect() },
+    let model = FolioMacComposition.makeModel(
       nearbyEnabled: Bundle.main.object(forInfoDictionaryKey: "FolioNearbyEnabled") as? Bool ?? true,
       migrateLegacyStorage: Bundle.main.object(forInfoDictionaryKey: "FolioMigrateLegacyStorage") as? Bool ?? true)
     _model = State(initialValue: model); delegate.model = model

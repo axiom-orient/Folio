@@ -27,7 +27,17 @@ Mac·iPhone·iPad에서 Markdown과 PDF 자료를 보관하고, 읽고, 원문 �
 
 루트 SDK의 의존성은 버전이 고정된 원격 패키지와 이 저장소에 포함된 원문 처리 모듈입니다. KnowledgeKit·Acornry의 필요한 소스는 `FolioKnowledge`·`FolioKnowledgeApple`·`FolioKnowledgeSQLite`·`FolioNearbyTransport` 모듈로 분리했습니다. 외부 앱의 같은 이름 모듈과 충돌하지 않도록 의도적으로 namespace를 변경했으며, 원본 체크섬·수정 내역·고지는 [Vendor](Vendor/README.md)에 보존합니다. `FolioUI`는 기존 Folio 앱 셸의 호환 제품이며, 새 호스트는 그 앱 전용 저장소·이관·SEMI 설정을 가져올 필요가 없습니다.
 
-개발 실행에는 Xcode의 Swift를 사용합니다.
+## 빌드
+
+Xcode 27 이상(Swift 6.3 이상)과 Git LFS가 필요합니다. 배포 대상은 macOS 27 및 iOS/iPadOS 27 이상입니다. 처음 복제할 때 모델 파일을 함께 받습니다.
+
+```sh
+git clone https://github.com/axiom-orient/Folio.git
+cd Folio
+git lfs pull
+```
+
+기본 Mac·iOS 빌드는 별도 SEMI SDK 없이 동작합니다. Mac의 SEMI 연결은 선택 기능이며 SDK를 포함하지 않은 빌드에서는 연결 메뉴가 나타나지 않습니다. 개발 실행에는 Xcode의 Swift를 사용합니다.
 
 ```sh
 export DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer
@@ -43,7 +53,7 @@ xcrun swift test --scratch-path "$HOME/Library/Developer/FolioBuilds/Tests/Folio
 
 SwiftPM·Xcode 빌드와 개발 앱 번들은 작업 트리 밖의 `~/Library/Developer/FolioBuilds/Development/<저장소 경로 digest>/`에 보관합니다. `DevelopmentPaths`가 캐시 루트를 선택하고 `DevelopmentBuildPaths`가 모드별 앱 제품 경로를 계산해 출력 안내·실행 파일 확인·기기 설치가 같은 경로를 사용합니다. bootstrap도 같은 외부 캐시 영역을 사용해 저장소에 `.build`를 다시 만들지 않습니다. Xcode가 로컬 패키지를 열 때 누적 빌드 파일까지 읽는 일을 줄이기 위한 경계입니다. `FOLIO_BUILD_ROOT`에 외부 절대 경로를 지정하면 그 경로를 사용합니다. 공백이 있는 경로도 인수 하나로 전달하며, 기존 캐시를 자동 삭제·이동하지 않습니다. 아이콘 원본과 asset catalog는 기존 저장소 경로를 유지합니다.
 
-Mac 앱은 정상 종료한 뒤 빌드합니다. 정식 서명·iCloud·App Group은 `Folio.xcodeproj`에서 설정합니다. 로컬 Mac 개발 앱은 `MacApp/Package.swift`가 루트 패키지와 `MacIntegration`을 조합하며 기존 빌드 스크립트가 이 진입점을 사용합니다. `MacIntegration`의 SEMI SDK 경로는 `FOLIO_SEMI_SDK_PATH`로 지정합니다. 이 앱 전용 의존성은 루트 SDK 그래프에 포함되지 않습니다.
+Mac 앱은 정상 종료한 뒤 빌드합니다. 정식 서명·iCloud·App Group은 `Folio.xcodeproj`에서 각자의 Apple 개발 팀과 capability로 설정합니다. 로컬 Mac 개발 앱은 `MacApp/Package.swift`를 사용합니다. 선택형 SEMI 연동을 활성화할 때만 `FOLIO_SEMI_SDK_PATH`를 지정합니다. [Mac 빌드와 선택형 연동](MacApp/README.md).
 
 `Package.swift`는 공통 모듈·도구의 선언형 정본이며 모든 타깃은 Swift 6 모드입니다. 앱·확장·UI 테스트·서명 설정은 체크인된 `Folio.xcodeproj`에서 관리합니다. Vault 가져오기는 `swift run FolioVaultImport`를 사용합니다.
 
@@ -57,7 +67,7 @@ Mac 앱은 정상 종료한 뒤 빌드합니다. 정식 서명·iCloud·App Grou
 
 링크된 기존 검증 결과는 각 날짜와 소스의 실행 범위입니다. SDK 추출의 빌드·타깃 검증과 기존 실기기 검증은 별도이며, 과거 결과를 새 SDK의 실기기 통과로 간주하지 않습니다.
 
-SEMI를 실행한 뒤 **자료함 → 관리 → SEMI에 연결**을 선택합니다. 조회는 접근 검토, 변경은 정확한 미리보기와 별도 승인을 거칩니다. 결과가 불확실하면 기존 영수증을 조회하며 변경을 자동 재실행하지 않습니다. [플랫폼·기존 자료 이관 계약](docs/PLATFORM_DECISIONS.md), [iOS 구현](docs/IOS_IMPLEMENTATION.md).
+선택형 SEMI SDK를 포함해 빌드하고 SEMI를 실행한 뒤 **자료함 → 관리 → SEMI에 연결**을 선택합니다. 조회는 접근 검토, 변경은 정확한 미리보기와 별도 승인을 거칩니다. 결과가 불확실하면 기존 영수증을 조회하며 변경을 자동 재실행하지 않습니다. [플랫폼·기존 자료 이관 계약](docs/PLATFORM_DECISIONS.md), [iOS 구현](docs/IOS_IMPLEMENTATION.md).
 
 Mac capability의 공개 schema와 실행 시 허용하는 최상위 입력 키는 `WikiCapabilityContract`가 함께 정의합니다. Provider는 준비·실행 Task와 승인 계획을 소유하며, 값·원문 버전·CAS 검사는 기존 capability와 `FolioKnowledgeApple`에 유지합니다.
 
@@ -66,3 +76,7 @@ Mac의 **Folio → 설정 → 스킬**에서 Codex·Claude Code 스킬을 글로
 검색 후보의 시간 제한·실행 수 제한과 인용 검증 API는 [인용 근거와 검색 검증](docs/EVIDENCE_VERIFICATION.md)에 설명합니다. `FolioSearchEvaluation`은 개인 자료를 사용하지 않는 한·영 합성 검색 평가 도구입니다. [Auto Ontology 비교와 개정 계획](docs/AUTO_ONTOLOGY_COMPARISON_AND_ROADMAP.md), [재검토·구현 결과](docs/AUTO_ONTOLOGY_IMPLEMENTATION_REVIEW.md)에 결정 근거와 실제 검증 범위를 기록합니다.
 
 메인은 **읽기·쓰기·만들기**에 집중합니다. 돋보기로 검색을 열고 **뜻으로 찾기**로 한국어·영어 의미 검색을 실행합니다. 연결은 **문서 옵션 → 연결된 문서 → 연결 제안**에서 두 근거를 검토하고 별도로 승인합니다. 점수·모델 설명·식별자는 정보나 원문 변경 상세에서 확인합니다. 고정된 다국어 검색·관련성 모델을 앱에 포함하며 본문을 외부 모델로 보내지 않습니다. 개발 빌드 전 `git lfs pull`로 모델 weight와 공유 tokenizer 표를 확보하세요. 기본 검색은 유지합니다. [원인 분석·구현·실기기 검증·한계](docs/SEMANTIC_SEARCH_IMPLEMENTATION.md), [메모리 개선과 기준 재검토](docs/SEMANTIC_MEMORY_INVESTIGATION.md)을 확인하세요.
+
+## 라이선스
+
+Folio 코드는 [MIT 라이선스](LICENSE)를 따릅니다. 포함된 타사 코드와 모델에는 각각의 라이선스와 고지가 적용됩니다. [Vendor 고지](Vendor/README.md)와 각 리소스의 라이선스를 확인하세요.

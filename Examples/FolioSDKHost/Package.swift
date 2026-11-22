@@ -10,7 +10,7 @@ let package = Package(
     .executable(name: "FolioSDKHost", targets: ["FolioSDKHost"]),
     .library(name: "FolioResearchExample", targets: ["FolioResearchExample"]),
   ],
-  dependencies: [.package(path: "../..")],
+  dependencies: [.package(name: "Folio", path: "../..")],
   targets: [
     .executableTarget(name: "FolioSDKHost", dependencies: ["FolioResearchExample"]),
     .target(name: "FolioResearchExample", dependencies: [

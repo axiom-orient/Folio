@@ -69,6 +69,7 @@ public final class WikiAppModel {
   let fileIntake: FolioFileIntake
   var isImportingReceived: Bool { fileIntake.isImportingReceived }
   var receivedFileTarget: FolioReceivedTarget? { hasOpenWorkspace ? FolioReceivedTarget.current(in: session) : nil }
+  public var canConnectProvider: Bool { session.canConnectProvider }
   public var connectionMessage: String {
     get { session.connectionMessage }
     set { session.connectionMessage = newValue }

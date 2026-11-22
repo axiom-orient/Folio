@@ -425,6 +425,22 @@ private enum WorkspaceJobTestError: Error, LocalizedError {
   await session.close {}
 }
 
+@Test @MainActor func providerAvailabilityFollowsAppComposition() throws {
+  let fixture = try SessionFixture()
+  defer { fixture.cleanup() }
+  let storage = FolioStorageAccess()
+  let standalone = FolioWorkspaceSession(defaults: fixture.defaults, storageAccess: storage,
+    stateRoot: { fixture.state }, applyIndex: { _ in })
+  let integrated = FolioWorkspaceSession(defaults: fixture.defaults, storageAccess: storage,
+    stateRoot: { fixture.state }, connectProvider: { _, _ in }, applyIndex: { _ in })
+  let standaloneModel = WikiAppModel(session: standalone, storageAccess: storage,
+    history: FolioLibraryHistory(defaults: fixture.defaults), nearbyEnabled: false, migrateLegacyStorage: false)
+  let integratedModel = WikiAppModel(session: integrated, storageAccess: storage,
+    history: FolioLibraryHistory(defaults: fixture.defaults), nearbyEnabled: false, migrateLegacyStorage: false)
+  #expect(!standaloneModel.canConnectProvider)
+  #expect(integratedModel.canConnectProvider)
+}
+
 @Test @MainActor func failedDraftRecoveryBindingBlocksSourceAdmissionAndProviderConnection() async throws {
   let fixture = try SessionFixture()
   defer { fixture.cleanup() }

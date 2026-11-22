@@ -46,8 +46,10 @@ struct WikiWorkspaceView: View {
           #if os(macOS)
           Button("Finder에서 원문 폴더 보기") { action(.reveal) }
           Button("폴더에 새 자료함 만들기…") { action(.createFolder) }
-          actionRow("SEMI에 연결", icon: "point.3.connected.trianglepath.dotted", action: .connect)
-          Text(model.connectionMessage).font(.callout).foregroundStyle(.secondary)
+          if model.canConnectProvider {
+            actionRow("SEMI에 연결", icon: "point.3.connected.trianglepath.dotted", action: .connect)
+            Text(model.connectionMessage).font(.callout).foregroundStyle(.secondary)
+          }
           #endif
         }
       }

@@ -25,6 +25,7 @@ final class FolioWorkspaceSession {
   private(set) var isSuspended = false
   var protectedDataAvailable: Bool { storageAccess.protectedDataAvailable }
   var isRefreshing: Bool { jobs.isRefreshing }
+  var canConnectProvider: Bool { connectProvider != nil }
   var connectionMessage = "SEMI 연결 안 됨"
   let cloudLibrary = WikiCloudLibrary()
   let access = WikiWorkspaceAccess()
