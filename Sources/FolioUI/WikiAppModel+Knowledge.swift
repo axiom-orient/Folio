@@ -110,7 +110,7 @@ enum FolioKnowledgeNote {
     let provenance = Provenance(question: answer.question, checkedAt: answer.checkedAt,
       sourceCheckStartedAt: sourceCheckStartedAt, sourceCheckFinishedAt: sourceCheckFinishedAt,
       atomicSnapshot: answer.atomicSnapshot, evidence: answer.evidence.map {
-        Provenance.Item(evidence: $0, producer: $0.source.kind == .pdf ? WikiPDFExtractor.identifier : nil)
+        Provenance.Item(evidence: $0, producer: $0.pdfRegion?.producer ?? ($0.source.kind == .pdf ? WikiPDFExtractor.identifier : nil))
       })
     let encoder = JSONEncoder(); encoder.outputFormatting = .sortedKeys; encoder.dateEncodingStrategy = .iso8601
     // YAML recognizes these Unicode separators as line breaks inside a quoted
@@ -133,15 +133,12 @@ enum FolioKnowledgeNote {
     var parts = ["## 질문\n\n" + WikiMarkdownEditor.literalInline(answer.question)]
     for evidence in answer.evidence {
       let label = WikiMarkdownEditor.literalInline(evidence.source.title + " · " + evidence.displayLocation)
-      var allowed = CharacterSet.urlPathAllowed
-      allowed.remove(charactersIn: "#?%()[]<>")
-      let path = "../" + (evidence.source.relativePath.addingPercentEncoding(withAllowedCharacters: allowed) ?? evidence.source.relativePath)
-      let fragment: String
-      if case .pdf(let pageIndex, _, _, _, _) = evidence.location { fragment = "#page=\(pageIndex + 1)" }
-      else { fragment = "" }
+      let path = try WikiPath.linkFromNotesDirectory(to: evidence.source.relativePath)
       let quote = evidence.text.split(omittingEmptySubsequences: false, whereSeparator: \.isNewline)
         .map { "> " + WikiMarkdownEditor.literalInline(String($0)) }.joined(separator: "\n")
-      parts.append("## [" + label + "](" + path + fragment + ")\n\n" + quote)
+      var fragment = evidence.location.savedCitationFragment
+      if evidence.pdfRegion != nil { fragment += "&folio-quote=" + evidence.id }
+      parts.append("## [" + label + "](" + path + "#" + fragment + ")\n\n" + quote)
     }
     let body = parts.joined(separator: "\n\n") + "\n"
     guard FolioInput.documentSource(id: placeholderID, title: title, body: body,

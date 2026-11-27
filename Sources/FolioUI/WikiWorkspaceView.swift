@@ -2,7 +2,7 @@ import SwiftUI
 
 struct WikiWorkspaceView: View {
   enum Action {
-    case importDocument, attachment, sendFile, sendArchive, ontology, refresh, rebuildSearch, publish
+    case attachment, sendFile, sendArchive, ontology, refresh, rebuildSearch, publish
     #if os(iOS)
     case photo
     #endif
@@ -24,7 +24,6 @@ struct WikiWorkspaceView: View {
         }
       }
       Section("추가") {
-        actionRow("문서 가져오기…", icon: "doc.badge.plus", action: .importDocument)
         actionRow("파일 첨부…", icon: "paperclip", action: .attachment)
         #if os(iOS)
         actionRow("사진 추가", icon: "photo", action: .photo).disabled(isAddingPhoto)

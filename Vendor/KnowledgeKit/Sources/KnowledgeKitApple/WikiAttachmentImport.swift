@@ -1,5 +1,6 @@
 import Foundation
 import FolioKnowledge
+import Markdown
 
 /// A copied asset and its separately committed note are distinct durable outcomes.
 public struct WikiAttachmentImport: Codable, Identifiable, Sendable {
@@ -14,6 +15,26 @@ public struct WikiAttachmentImport: Codable, Identifiable, Sendable {
   public var linkedReceipt: WikiWriteReceipt?
   public var noteID: String { id.uuidString.lowercased() }
   public var notePath: String { "notes/" + noteID + ".md" }
+
+  package static func noteSource(id: String, filename: String, link: String) -> String {
+    let title = filename.components(separatedBy: .newlines).joined(separator: " ")
+    let body = Paragraph(Link(destination: link, Markdown.Text(WikiMarkdownEditor.literalInline(title)))).format()
+    return "---\nid: \(id)\n---\n\n" + WikiMarkdownEditor.literalHeading(title) + "\n\n" + body + "\n"
+  }
+
+  /// Only the bytes produced by the importer are an attachment-only note.
+  package static func unmodifiedPDFPath(in document: WikiDocument) -> String? {
+    guard document.declarations.count == 1, let declaration = document.declarations.first,
+      declaration.origin == .markdownLink,
+      let path = WikiPath.resolveLink(declaration.target, from: document.relativePath),
+      path.hasPrefix("attachments/"),
+      URL(fileURLWithPath: path).pathExtension.lowercased() == "pdf" else { return nil }
+    let name = URL(fileURLWithPath: path).lastPathComponent
+    let prefix = document.id + "-"
+    guard UUID(uuidString: document.id) != nil, name.hasPrefix(prefix) else { return nil }
+    let generated = noteSource(id: document.id, filename: String(name.dropFirst(prefix.count)), link: declaration.target)
+    return SourceDigest.sha256(generated) == document.revision ? path : nil
+  }
 }
 
 extension WikiWorkspace {

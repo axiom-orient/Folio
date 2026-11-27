@@ -1,21 +1,16 @@
 /// Shared by the development tool and the standalone renderer compilation.
-/// Existing asset names are part of the app catalogs' references.
+/// These filenames match the AppIcon catalog and the development app bundle.
 enum DevelopmentIconLayout {
-  struct Variant: Sendable {
-    let prefix: String
-    let name: String
-    let catalog: String
-    var iconName: String { name + "Icon" }
-    var iosFilename: String { prefix + "-ios-icon-1024.png" }
-    func rasterFilename(size: Int) -> String { "\(prefix)-icon-\(size).png" }
-  }
-
-  static let variants = [
-    Variant(prefix: "folio", name: "Folio", catalog: "AppIcon"),
-    Variant(prefix: "folio-minimalism", name: "FolioMinimalism", catalog: "FolioMinimalismIcon"),
-  ]
+  static let iconsetName = "FolioIcon.iconset"
+  static let icnsFilename = "FolioIcon.icns"
+  static let iosFilename = "folio-ios-icon-1024.png"
+  static let catalogName = "AppIcon.appiconset"
+  static let iosCatalogFilename = "Folio-1024.png"
   static let rasterSizes = [16, 32, 64, 128, 256, 512, 1024]
   static let catalogSizes = [16, 32, 128, 256, 512]
+
+  static func rasterFilename(size: Int) -> String { "folio-icon-\(size).png" }
+  static func catalogFilename(size: Int, scale: Int) -> String { "Folio-mac-\(size)@\(scale)x.png" }
 
   static func iconsetFilenames(size: Int) -> [String] {
     var names: [String] = []

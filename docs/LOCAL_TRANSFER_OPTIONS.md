@@ -2,7 +2,7 @@
 
 권고: **지속 동기화는 기존 iCloud Documents, Apple 기기끼리 파일 한 번 전달은 native ShareLink/AirDrop, 여러 플랫폼에 전달은 LocalSend, Folio 안의 근거리 전송에는 Acornry의 암호화 PSK 경로를 사용한다.** 위키·온톨로지 정본과 저장 권한은 KnowledgeKit에 유지한다. 전송 라이브러리가 위키 DB나 두 번째 동기화 엔진을 소유하지 않는다.
 
-LocalSend·Acornry의 선택은 두 로컬 checkout의 READ_ONLY 비교에 근거한다. 후속 작업에서 Folio가 Acornry의 암호화 전송·수신·가역 보관을 소비하고 기존 ZIP·Markdown 가져오기에 연결했다. 이 비교 시점의 실제 두 기기 전송은 NOT_RUN이었다. 이후 기기 전송·수신·위키 반영 관측은 IMPLEMENTATION_STATUS.md의 과거 설치본 기록을 따른다. 두 전송 저장소에는 Git HEAD가 없다. 비교 snapshot은 [비교 기록](../build/verification/nearby-transfer-comparison-20261010.json), 구현·실행 범위는 [Current](IMPLEMENTATION_STATUS.md)를 따른다.
+LocalSend·Acornry를 비교한 뒤 Folio는 Acornry의 암호화 전송과 수신, 가역 보관을 기존 ZIP·Markdown 가져오기에 연결했다. 적용한 구현과 사용 절차는 [근거리 전송](NEARBY_TRANSFER.md)에 기록한다.
 
 | 방식 | 적합한 목적 | 실제 재사용 단위 | 현재 Folio 범위 |
 |---|---|---|---|
@@ -18,7 +18,7 @@ Acornry는 단순 discovery transport가 아니다. AcornryNearby가 전송 수�
 
 송신은 Folio가 exportMarkdown 또는 exportSourceArchive로 만든 저장된 원문 복사본을 AcornryFileSource에 전달한다. 미저장 초안·SQLite·receipt·모델 상태를 전송하지 않는다. 수신 receipt는 파일 전달 결과이고 KnowledgeKit import/CAS receipt는 원문 반영 결과다. 응답 유실의 outcomeUnknown은 원래 ID+manifest digest로 reconcile하며 새 ID 재전송으로 숨기지 않는다.
 
-Folio의 **자료함 → 관리 → 문서 가져오기…**는 열린 자료함에 단일 .md/.markdown을 새 문서로 추가한다. 자료함 목록의 **자료함 가져오기…**는 _workspace.md가 하나 있는 Folio ZIP·원문 폴더를 이 기기의 자료함으로 복원한다. 먼저 자료함이 없으면 폴더·ZIP으로 열거나 새 자료함을 만든다. 다른 앱에서 ‘Folio로 열기’를 선택하면 파일명과 Markdown의 대상 자료함/ZIP의 새 로컬 자료함을 확인하고 명시적으로 추가한다. 원문 파일은 보존하며 ZIP을 Files에서 먼저 풀 필요가 없다.
+Folio의 **자료 추가 → 파일 가져오기…**는 열린 자료함에 Markdown·PDF를 추가한다. 자료함 목록의 **자료함 가져오기…**는 _workspace.md가 하나 있는 Folio ZIP·원문 폴더를 이 기기의 자료함으로 복원한다. 먼저 자료함이 없으면 폴더·ZIP으로 열거나 새 자료함을 만든다. 다른 앱에서 ‘Folio로 열기’를 선택하면 파일명과 Markdown의 대상 자료함/ZIP의 새 로컬 자료함을 확인하고 명시적으로 추가한다. 원문 파일은 보존하며 ZIP을 Files에서 먼저 풀 필요가 없다.
 
 ZIPFoundation 0.9.20을 사용하며 MIT 고지문을 패키지 resource로 포함한다. 모든 archive 경로에서 traversal·symlink·NFC/대소문자 중복·파일/부모 충돌을 거부하고, 8,192 entry·깊이32·archive/확장256MiB를 제한한다. notes/·attachments/·metadata만 최대2,048파일로 복사한다. note256KiB·metadata64KiB·첨부50MiB와 실제 확장 size/CRC를 확인한 뒤 기존 importLocal의 identity/no-overwrite 계약으로 넘긴다. SQLite·초안·receipt는 제외하며 같은 ID의 자료함을 자동 병합하지 않는다.
 

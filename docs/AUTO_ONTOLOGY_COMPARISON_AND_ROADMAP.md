@@ -2,6 +2,8 @@
 
 작성: 2026-11-08 · 개정: 2026-11-08 · 상태: **재검토 후 단계별 구현**, [실행 기록](AUTO_ONTOLOGY_IMPLEMENTATION_REVIEW.md) 참조
 
+이 문서는 11월 8일의 소스 버전을 기준으로 한다. 그 이후의 변경은 [Auto Ontology v1.3.0](https://github.com/NVIDIA/auto-ontology/releases/tag/v1.3.0)과 [Folio의 PDF 근거 구현](PDF_EVIDENCE.md)에서 확인할 수 있다.
+
 ## 1. 결정 요약
 
 **Folio의 문서 원문 중심 구조를 기준 trunk로 유지하고, Auto Ontology의 후보 생성 → 검토 → 근거 확인 → 응답 가능성 판정이라는 설계 원칙을 문서 환경에 맞게 차용한다.** 서버 전체, SQL 생성 파이프라인, Postgres, NVIDIA NIM, 웹 UI를 Folio에 통째로 이식할 근거는 없다. 두 제품은 대상 데이터와 동작 경계가 다르다.

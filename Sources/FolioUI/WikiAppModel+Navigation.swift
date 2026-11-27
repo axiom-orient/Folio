@@ -4,36 +4,54 @@ import FolioKnowledgeApple
 
 extension WikiAppModel {
   func openMarkdownLink(_ link: String, from document: WikiDocument, in window: WikiWindowState) async {
-    guard hasOpenWorkspace, let path = WikiPath.resolveLink(link, from: document.relativePath) else { return }
+    guard hasOpenWorkspace, let workspace, let path = WikiPath.resolveLink(link, from: document.relativePath) else { return }
     let navigation = window.beginNavigation()
-    if path.hasPrefix("attachments/") {
-      if URL(fileURLWithPath: path).pathExtension.lowercased() == "pdf",
-        let page = Self.citedPDFPage(in: link), let workspace {
-        let generation = workspaceGeneration
-        func isCurrent() -> Bool {
-          !Task.isCancelled && hasOpenWorkspace && workspaceGeneration == generation
-            && window.navigationGeneration == navigation && window.selectedDocumentID == document.id
+    let generation = workspaceGeneration
+    func citationIsCurrent() -> Bool {
+      !Task.isCancelled && hasOpenWorkspace && generation == workspaceGeneration
+        && navigation == window.navigationGeneration && window.selectedDocumentID == document.id
+    }
+    let fragment = link.split(separator: "#", maxSplits: 1, omittingEmptySubsequences: false).dropFirst().first.map(String.init)
+    let pathExtension = URL(fileURLWithPath: path).pathExtension.lowercased()
+    if ["md", "markdown"].contains(pathExtension), fragment?.hasPrefix(WikiKnowledgeLocation.markdownCitationPrefix) ?? true {
+      do {
+        let verified = try await workspace.previewSavedKnowledgeMarkdown(notePath: document.relativePath,
+          noteRevision: document.revision, sourcePath: path, fragment: fragment)
+        guard citationIsCurrent() else { return }
+        if let verified {
+          window.savedCitation = .init(documentID: document.id, workspaceGeneration: generation,
+            content: .markdown(verified.document, sectionID: verified.sectionID, location: verified.location))
+          return
         }
+      } catch {
+        if citationIsCurrent() { message = "저장한 Markdown 인용 위치를 확인할 수 없습니다. 자료에서 근거를 다시 찾아 주세요." }
+        return
+      }
+    }
+    if path.hasPrefix("attachments/") {
+      if pathExtension == "pdf", let citation = Self.citedPDFPage(fragment) {
         do {
           let verified = try await workspace.previewSavedKnowledgePDF(notePath: document.relativePath,
-            noteRevision: document.revision, attachmentPath: path, pageIndex: page)
-          guard isCurrent() else { return }
+            noteRevision: document.revision, attachmentPath: path, pageIndex: citation.index, evidenceID: citation.evidenceID)
+          guard citationIsCurrent() else { return }
           if let verified {
-            window.savedPDF = .init(documentID: document.id, workspaceGeneration: generation, preview: verified)
+            window.savedCitation = .init(documentID: document.id, workspaceGeneration: generation, content: .pdf(verified))
             return
           }
         } catch {
-          if isCurrent() { message = "저장한 PDF 인용 위치를 확인할 수 없습니다. 자료에서 근거를 다시 찾아 주세요." }
+          if citationIsCurrent() { message = "저장한 PDF 인용 위치를 확인할 수 없습니다. 자료에서 근거를 다시 찾아 주세요." }
           return
         }
+      } else if pathExtension == "pdf", fragment?.contains("&folio-quote=") == true {
+        message = "저장한 PDF 인용 위치를 확인할 수 없습니다. 자료에서 근거를 다시 찾아 주세요."
+        return
       }
       await previewAttachment(path: path)
       return
     }
-    guard let target = snapshot?.documents.first(where: { $0.relativePath == path }), let workspace else {
+    guard let target = snapshot?.documents.first(where: { $0.relativePath == path }) else {
       message = "연결된 문서를 찾지 못했습니다. 자료함의 원문과 다운로드 상태를 확인해 주세요."; return
     }
-    let generation = workspaceGeneration
     do {
       let bytes = try await workspace.source(relativePath: path)
       guard generation == workspaceGeneration, navigation == window.navigationGeneration else { return }
@@ -74,10 +92,17 @@ extension WikiAppModel {
     return false
   }
 
-  private static func citedPDFPage(in link: String) -> Int? {
-    guard let fragment = link.split(separator: "#", maxSplits: 1).dropFirst().first, fragment.hasPrefix("page="),
-      let page = Int(fragment.dropFirst("page=".count)), page > 0 else { return nil }
-    return page - 1
+  private static func citedPDFPage(_ fragment: String?) -> (index: Int, evidenceID: String?)? {
+    guard let fragment, fragment.hasPrefix("page=") else { return nil }
+    let fields = fragment.components(separatedBy: "&folio-quote=")
+    guard fields.count <= 2, let first = fields.first,
+      let page = Int(first.dropFirst("page=".count)), page > 0 else { return nil }
+    if fields.count == 1 { return (page - 1, nil) }
+    let id = fields[1]
+    guard id.utf8.count == 64, id.utf8.allSatisfy({ (48...57).contains($0) || (97...102).contains($0) }) else {
+      return nil
+    }
+    return (page - 1, id)
   }
 
   private func navigateToEvidence(_ reference: WikiEvidenceReference, in window: WikiWindowState) async throws -> Bool {

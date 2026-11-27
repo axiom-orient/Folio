@@ -22,10 +22,10 @@ Folio의 본체는 책·문제집·논문 등 저장한 자료에서 필요한 �
 | --- | --- | --- |
 | 자료와 근거 타입 | 자료 범위·원본 경로·소유 문서·revision, Markdown UTF-8 범위, PDF page index·label·page text hash·영역을 구별한다. | 코드 추가: [WikiKnowledgeTypes](../Vendor/KnowledgeKit/Sources/KnowledgeKitApple/WikiKnowledgeTypes.swift) |
 | 자료 admission | 현재 읽을 수 있는 Markdown과 그 문서가 직접 연결한 `attachments/` PDF만 자료 목록에 넣는다. 다른 경로의 복제본·링크 제거·소유 문서 변경을 기존 근거로 우회할 수 없게 검사한다. | 코드 추가: [WikiKnowledgeSources](../Vendor/KnowledgeKit/Sources/KnowledgeKitApple/WikiKnowledgeSources.swift) |
-| PDF 추출 | admitted Data의 PDF 텍스트 layer를 페이지별로 읽고 원문 문자열과 cropBox 정규화 영역을 보존한다. 색인은 한 페이지씩 소비하여 모든 페이지의 줄 영역을 동시에 유지하지 않는다. 읽을 텍스트가 없는 페이지는 명시적으로 남긴다. | 구현·추출 fixture PASS: [WikiPDFExtraction](../Vendor/KnowledgeKit/Sources/KnowledgeKitApple/WikiPDFExtraction.swift) |
+| PDF 추출 | PDFKit으로 페이지의 텍스트와 위치를 읽는다. 스캔 페이지와 혼합 페이지의 이미지 영역은 기기 내 Vision으로 인식한다. 표의 행, 분리되는 열, 짧은 수식 줄은 위치별로 색인하며 읽지 못한 페이지는 범위에 알린다. | [추출 비교·검증](PDF_EVIDENCE.md) |
 | 지속 색인 | 자료별 블록·FTS·모델 식별자가 있는 벡터 필드를 SQLite 파생 상태에 저장한다. 자료 교체는 트랜잭션으로 수행하고 이전 벡터를 버린다. 전역 row cursor로 256개씩 읽을 수 있다. | 코드 추가: [WikiKnowledgeProjection](../Vendor/KnowledgeKit/Sources/KnowledgeKit/WikiKnowledgeProjection.swift) |
 | 원문 재확인 | 근거를 읽거나 PDF를 열 때 현재 원본과 소유 문서의 연결을 다시 확인한다. 같은 자료의 인용을 묶어서 선택 페이지를 재추출한다. 원문 UTF-8, 범위·해시·영역을 검증한 인용만 표시한다. | `readKnowledgeEvidence(_:)`, `previewKnowledgePDF(_:)` |
-| 앱·SDK 질의 진입점 | `prepareKnowledgeIndex()`·`knowledgeAnswer`·근거 읽기·PDF snapshot API가 연결되어 있다. 앱 기본 경로는 모델을 자동 로드하지 않으며, 뜻 검색은 명시적으로 선택한다. SDK의 기본 질의는 모델 없는 경로다. | 구현·컴파일·핵심 회귀 PASS: [WikiKnowledgeQuery](../Vendor/KnowledgeKit/Sources/KnowledgeKitApple/WikiKnowledgeQuery.swift), [WikiSearchService](../Vendor/KnowledgeKit/Sources/KnowledgeKitApple/WikiSearchService.swift), [FolioSession](../Sources/FolioCore/FolioSession.swift) |
+| 앱·SDK 질의 진입점 | `prepareKnowledgeIndex()`·`knowledgeAnswer`·근거 읽기·PDF snapshot API가 연결되어 있다. 앱과 SDK의 기본 질의는 키워드 검색을 사용한다. 앱의 뜻 검색은 명시적으로 선택한다. | 구현·컴파일·핵심 회귀 PASS: [WikiKnowledgeQuery](../Vendor/KnowledgeKit/Sources/KnowledgeKitApple/WikiKnowledgeQuery.swift), [WikiSearchService](../Vendor/KnowledgeKit/Sources/KnowledgeKitApple/WikiSearchService.swift), [FolioSession](../Sources/FolioCore/FolioSession.swift) |
 | 사용자 화면 | 검색 결과, 자료함 More, 문서 More에서 질문 화면을 연다. 인용·출처·부분 누락을 표시하고 Markdown 구간 또는 PDF 페이지·영역을 연다. PDF viewer는 검증된 Data만 받는다. | 코드 연결: [FolioKnowledgeQueryView](../Sources/FolioUI/FolioKnowledgeQueryView.swift). 실제 화면 실행은 미검증 |
 | PDF 직접 수집·근거 노트 저장 | 기존 첨부 import와 writer의 결과 관찰 경로를 재사용하여 자료 하나당 첨부 노트 하나를 만들고, 사용자가 선택한 근거 묶음을 별도 노트로 저장한다. | 구현·2개 앱 모델 회귀 PASS: [WikiAppModel+Imports](../Sources/FolioUI/WikiAppModel+Imports.swift), [WikiAppModel+Knowledge](../Sources/FolioUI/WikiAppModel+Knowledge.swift) |
 | 핵심 회귀 fixture | PDF 원문·위조 인용·원본 변경·연결 제거·다른 자료함·닫힘, 512개 이후 블록·원자적 교체·범위 필터를 검사한다. 이전 시험은 29개였다. | 후속 변경의 20개 확인은 [세부 재검토](KNOWLEDGE_PLATFORM_REVIEW.md#이번-확인)에 기록 |
@@ -47,7 +47,7 @@ Folio의 본체는 책·문제집·논문 등 저장한 자료에서 필요한 �
 
 ### P1. 수집 → 전체 자료 색인 → 질문 → 원문 확인 연결
 
-1. PDF 파일 선택을 기존 첨부 import로 보낸다. 원본 PDF를 유지하고 목록에는 첨부 노트 한 개를 표시한다. 페이지·블록을 개별 사용자 문서로 만들지 않는다.
+1. PDF 파일 선택을 기존 첨부 import로 보낸다. 원본 PDF를 유지하고 목록에는 첨부 노트 한 개를 표시한다. 자동 생성한 첨부 노트의 파일명은 본문 근거에서 제외한다. 사용자가 편집한 노트는 Markdown으로 검색하며, PDF는 연결을 검증한 뒤 색인한다.
 2. 허용된 자료의 추출 가능한 블록을 지속 색인한다. 중단·실패·텍스트 없는 페이지를 coverage에 반영하며, 일부 cache를 전체 자료처럼 반환하지 않는다.
 3. 기본 질문은 모델 없이 키워드·FTS 경로를 사용한다. 자료 한 개를 지정한 질의는 그 문서와 연결된 자료로 제한하고, 잘못된 범위를 전체 자료함 검색으로 확대하지 않는다.
 4. 뜻 검색은 사용자 선택으로 실행한다. 전체 벡터를 한 번에 최대 256개씩 순회하고 중단 후 유효한 cache를 재사용한다. 키워드와 벡터 순위를 결합한 뒤 MiniLM에 최대 20개의 후보를 보낸다. 이 한도는 색인 대상의 개수와 별개다.
@@ -81,9 +81,9 @@ Folio의 본체는 책·문제집·논문 등 저장한 자료에서 필요한 �
 
 ## 5. 지원 범위와 한계
 
-- **포맷:** 현재 원문 경로는 Markdown과 연결된 텍스트 PDF다. 책·논문·문제집은 자료 분류이며 별도의 해석 엔진을 뜻하지 않는다. EPUB·DOCX·웹 수집은 이번 완료 범위에 포함하지 않는다.
+- **포맷:** 현재 원문 경로는 Markdown과 연결된 텍스트·스캔 PDF다. 책·논문·문제집에 같은 검색·원문 확인 흐름을 사용한다.
 - **크기:** 이번 색인의 읽기 경계는 Markdown 개별 256 KiB, PDF 개별 50 MiB다. 일반 문서 writer의 기존 한도는 변경하지 않았다. 새 근거 노트에만 frontmatter 64 KiB·전체 256 KiB를 적용한다. 큰 책 지원은 한도 숫자만 늘리는 변경으로 처리하지 않고 streaming·페이지 처리·취소 가능한 작업으로 별도 구현한다. 자료 하나당 최대 100,000블록과 질의·payload 한도도 존재한다.
-- **PDF:** PDFKit 텍스트 layer는 화면의 읽기 순서, 다단 문서, 표·수식·각주 구조를 완전히 복원하지 않는다. 이미지·빈 페이지는 읽을 수 없는 페이지로 남으며 OCR은 수행하지 않는다. 암호화 PDF는 현재 추출 대상에서 거부한다.
+- **PDF:** 텍스트가 없는 페이지와 본문이 있는 페이지에 그려진 이미지 영역에 스캔 인식을 적용한다. 표·수식은 확인 가능한 문자열과 원문 위치를 제공한다. 복잡한 행·열 병합과 수식 의미 해석은 별도 범위다. 암호화 PDF는 검색용 추출 대상에서 거부한다.
 - **원문 위치:** 영역은 cropBox 기준 정규화 좌표다. 줄 영역을 찾을 수 없으면 페이지 인용만 제공한다. 눈에 보이는 인쇄 쪽수와 PDF page index가 다를 수 있어 둘을 구별한다.
 - **정확성:** 현재 결과는 원문 인용이며, 인용의 답변 적합성·논문의 신뢰성·수식의 타당성·최신성·상충 여부를 일반적으로 인증하지 않는다.
 - **검색 품질:** 한국어·영어 뜻 검색은 기존 E5·관련성 provider를 사용한다. 새 PDF corpus의 한국어 실측이나 새 모델 우위를 확인했다고 선언하지 않는다. 무관한 질의에는 근거 없음으로 끝낼 수 있어야 한다.
@@ -97,7 +97,7 @@ P0–P2의 현재 흐름을 먼저 유지한다. 아래 단계는 독립적으�
 | --- | --- | --- | --- |
 | P2.1b: 저장 작업의 재실행 후 확인 | 종료 직전 실패로 어떤 근거 노트가 저장됐는지 사용자가 기존 목록과 관리 화면에서 판단하기 어렵다. | 계정별 기존 복구 범위에 제출 ID와 사용자 요청을 연결한다. 재실행 시 writer의 intent·receipt를 읽거나 현재 원문을 관측한다. | 원문 게시 직전·직후에 종료한 각 사례를 한 번 확인한다. 결과가 불확실하면 기존 작업을 관측하고, 새 노트 작성은 사용자가 의도적으로 요청해야 한다. |
 | P2.2: 큰 자료함 증분 갱신 | 같은 자료에서 준비와 게시의 전체 인벤토리 비교가 실제 지연의 주요 원인으로 나타난다. | 같은 파일 revision을 재사용할 수 있는 변경 감지, 자료별 작업 중단·재개, 선택 페이지 추출과 벡터 기록을 분리한다. 지원 크기 안의 대표 PDF를 섞은 시작/재검색 사례를 측정한다. | 변경·삭제·충돌 뒤 stale 인용을 반환하지 않는다. 한 자료를 바꾼 후 여전히 관련 없는 모든 PDF의 추출과 벡터화가 일어나는지 확인한다. 기존 512개 이후 근거는 계속 찾을 수 있다. 필요할 때만 변경 전후 지연·메모리를 한 번씩 비교한다. |
-| P3: OCR·문서 구조 | 사용자 자료의 이미지 페이지 또는 읽기 순서 누락이 실제 근거 검색을 막는다. | `ExtractionProducer` 역할, 버전이 고정된 producer identity, 페이지 원본 hash, 텍스트·영역·추출 상태, 취소·재개 작업, 원본 이미지와 대조하는 검토 경로. native OCR과 외부 parser는 별도 adapter로 둔다. | 이미지 원본을 그대로 보존하고 OCR 산출물을 `ocrUnreviewed`로 표시한다. 교정 전후와 source anchor를 추적한다. 읽지 못한 표·수식을 임의 텍스트로 확정하지 않는다. |
+| P3: OCR·문서 구조 기본 경로 구현 | 스캔 페이지의 글자와 텍스트 PDF에서 읽을 수 있는 표·수식 내용의 위치를 찾는다. | Vision OCR·좌표 기반 묶음·같은 쪽의 개별 인용 링크. 스캔 인식에 `ocrUnreviewed`를 기록한다. | 원본·좌표를 다시 검사한다. 구조가 복잡한 문서나 수식 전사 후보는 실제 실패 예시와 원문 대조를 바탕으로 별도 평가한다. [비교·검증](PDF_EVIDENCE.md) |
 | P4a: 검색 provider capability | 기존 한국어·영어 기준선에서 실패한 질문을 확보하고 실패가 추출·범위·필터 문제가 아닌 표현 검색 문제임을 확인한다. | 텍스트/이미지, 단일/다중 벡터, 길이·dtype·pooling·정규화·query/document 지시를 명시하는 capability와 cache identity. 재현 가능한 artifact manifest와 작은 비교 corpus. | 미지원 입력을 명시적으로 거부한다. 차원·비유한 값·토큰 처리·모델 revision이 검증되고 기존 벡터를 새 모델 벡터로 오인하지 않는다. |
 | P4b: EmbeddingGemma 2 등 새 단일 벡터·다중 모달 후보 | P4a가 준비되고, 해결할 질의 유형과 배포 runtime·artifact·이용 조건이 확정된다. 이미지 입력은 페이지 이미지 producer·원본 좌표 대응도 필요하다. | 기존 E5와 독립된 adapter, tokenizer/processor, query/document 입력 계약, dtype 경로, 모델별 변환·캐시 무효화, 취소·자원 해제. | 공식 카드의 fp16 activation 위험을 피한 수치 경로에서 finite 출력과 참조 출력 대응을 확인한다. 같은 한국어·영어 corpus에서 기존 필수 근거 누락·무관 결과가 늘지 않고 목표 실패 사례를 개선한다. Folio 실행 결과를 발표 수치와 구별한다. |
 | P4c: KURE-v2·late interaction·다중 벡터 | 단일 벡터+관련성 검사로 남는 한국어 세밀 대응의 실패를 확보한다. 저장량·질의 지연·배포 지원을 포함한 이득이 확인된다. | token 벡터와 mask를 다루는 별도 provider, MaxSim 등 해당 모델 점수 계약, source별 vector 저장·압축·순회, 모델별 index revision. | 단일 `[Float]` 반환으로 가장하지 않는다. 모델 참조 구현과 점수를 대조하고 긴 입력·token 수·빈 입력을 처리한다. 전체 index의 벡터 원소·보조 index·작업 메모리와 지연을 함께 측정한다. |
@@ -105,7 +105,7 @@ P0–P2의 현재 흐름을 먼저 유지한다. 아래 단계는 독립적으�
 | P6: 자료 간 비교·지식 상태 | 여러 판본·연구를 하나의 결론으로 합치는 사용 사례가 있고, P5의 주장별 근거가 존재한다. | 판본·대상·방법·시점·정정·철회 메타데이터, 지지/제한/상충 근거 관계, 갱신 시 관련 산출물 무효화. | 최신 날짜·높은 유사도만으로 참을 선택하지 않는다. 서로 다른 전제와 원저자/재인용을 구분하고 상충·미확인을 그대로 전달한다. |
 | P7: 교육·문제풀이 소비 기능 | 자료 검색·인용·설명이 해당 분야에서 유용하고 근거 범위를 정의할 수 있다. | 설명·문항·풀이 adapter, 과목별 계산·형식 검증기, 사용자가 선택하는 학습 흐름. | 모든 설명·정답의 원문 근거와 생성물 구분을 유지한다. 공통 자료 수집·검색·원문 확인 화면을 학습 관리 화면으로 바꾸지 않는다. |
 
-P2.1a의 PDF 링크는 저장 노트 revision, 출처 기록, 현재 PDF와 해당 페이지를 확인한 뒤 미리보기로 연결한다. 같은 페이지를 가리키는 여러 인용은 페이지 수준으로 연다. iOS 앱이 관리하는 로컬 자료함에서 새로 만드는 인용은 설치 범위와 자료함 ID를 사용해 같은 앱의 저장 경로가 이동한 뒤에도 정확한 원본과 위치를 확인한다. 기존 경로 기반 인용은 기록한 경로를 확인할 수 있을 때 호환되며, 검증에 실패하면 재검색을 안내한다. [현재 화면과 진입점](FOLIO_REDESIGN.md) · [시뮬레이터 기록](Design/EvidenceFlow-20261122/SIMULATOR_REVIEW.md).
+P2.1a의 PDF·Markdown 링크는 저장 노트 revision, 출처 기록, 현재 원문의 인용 위치를 확인한 뒤 미리보기를 연다. 저장한 PDF 영역 인용은 같은 쪽에서도 각 영역을 연다. 기존 PDF 페이지 링크는 해당 페이지를, Markdown은 검증된 바이트 범위가 있는 구획을 보여 준다. 예전 Markdown 링크는 기록에서 같은 경로의 인용을 하나로 확인할 수 있을 때 열린다. iOS 로컬 자료함의 새 인용은 설치 범위와 자료함 ID를 사용한다. 원본이나 인용 위치를 검증할 수 없으면 재검색을 안내한다. [PDF 추출·원문 확인](PDF_EVIDENCE.md) · [현재 화면과 진입점](FOLIO_REDESIGN.md).
 
 확인된 대표 PDF가 텍스트 추출에 실패하면 P3, 원문은 읽히지만 질문의 표현 때문에 놓치면 P4a부터 진행한다. 테스트 자료에는 원본 판본, 질문, 기대 페이지·행, 반례를 함께 기록한다. 같은 질문에서 P4b는 단일 벡터·멀티모달 적합성, P4c는 토큰별 비교의 개선 폭을 각각 본다. 충분한 근거 검색 품질이 확인되면 P5를 시작할 수 있다.
 

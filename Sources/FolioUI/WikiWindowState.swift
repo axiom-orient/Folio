@@ -36,19 +36,23 @@ public final class WikiWindowState {
   var quickCreationTitle: String { if case .awaitingResult = quickCreation { "생성 결과 확인" } else { "새 문서" } }
   var fileAction: WikiFileAction?
   var metadataSelection: WikiMetadataSelection?
-  struct SavedPDF: Identifiable {
+  struct SavedCitation: Identifiable {
+    enum Content {
+      case markdown(WikiDocument, sectionID: String, location: String)
+      case pdf(WikiKnowledgePDFPreview)
+    }
     let id = UUID()
     let documentID: String
     let workspaceGeneration: Int
-    let preview: WikiKnowledgePDFPreview
+    let content: Content
   }
-  var savedPDF: SavedPDF?
+  var savedCitation: SavedCitation?
   public var showSidebar = true
   public var selectedDocumentID: String? {
     didSet {
       guard selectedDocumentID != oldValue else { return }
       navigationGeneration += 1
-      savedPDF = nil
+      savedCitation = nil
       editorStartsAtEnd = false
       selectedSectionID = selectedDocumentID.flatMap { readingAnchors[$0] }; isEditing = false
       if recordingHistory, let oldValue {
@@ -91,7 +95,7 @@ public final class WikiWindowState {
     fileReplacements = [:]; navigationDocumentIDs = []; documentCatalogRevision += 1
     fileBrowserContext = nil; fileAction = nil
     metadataSelection = nil
-    savedPDF = nil
+    savedCitation = nil
   }
   func applyFileChanges(replacements: [String: String], removedIDs: Set<String>) {
     fileReplacements = replacements

@@ -203,6 +203,7 @@ struct FolioKnowledgeQueryView: View {
         VStack(alignment: .leading, spacing: 16) {
           Text("결과는 저장한 원문에서 가져온 인용입니다. 출처를 열어 문맥을 확인할 수 있습니다.")
           Text("키워드는 입력한 단어를, 뜻은 비슷한 한국어·영어 표현을 찾습니다.")
+          Text("‘스캔 인식’은 이미지에서 읽은 글자입니다. 수치와 수식 기호는 원문에서 확인할 수 있습니다.")
           if let answer {
             let coverage = answer.coverage
             Text("자료 \(coverage.sourceCount)개 · 구간 \(coverage.blockCount)개")
@@ -324,8 +325,8 @@ struct FolioKnowledgeQueryView: View {
   }
 }
 
-/// An admitted Markdown snapshot is read in place, keeping the question and results below it.
-private struct FolioKnowledgeMarkdownView: View {
+/// An admitted Markdown snapshot is read in place over the query or saved note.
+struct FolioKnowledgeMarkdownView: View {
   let document: WikiDocument
   let location: String
   @State private var anchor: String?
@@ -389,8 +390,14 @@ struct FolioKnowledgePDFView: View {
       .navigationBarTitleDisplayMode(.inline)
       #endif
       .safeAreaInset(edge: .top, spacing: 0) {
-        if let title {
-          Text(title).font(.subheadline)
+        if title != nil || preview.usesOCR {
+          VStack(alignment: .leading, spacing: 4) {
+            if let title { Text(title).font(.subheadline) }
+            if preview.usesOCR {
+              Text("스캔 인식 영역 · 실제 글자와 기호를 원문에서 확인하세요.")
+                .font(.caption).foregroundStyle(.secondary)
+            }
+          }
             .frame(maxWidth: .infinity, alignment: .leading)
             .padding(.horizontal, 20).padding(.vertical, 8).background(.background)
         }

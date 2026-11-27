@@ -9,16 +9,21 @@ if not __debug__: raise SystemExit('Run without -O: source-contract assertions m
 
 ROOT = pathlib.Path(__file__).resolve().parents[2]
 RESOURCES = ROOT / 'Sources/FolioSemanticModels/Resources'
+REFERENCE = pathlib.Path(__file__).resolve().parent / 'ReferenceTokenizers'
 INPUTS = {'tokenizer.json': 'cd98e5698b201ba914efb8c18b6709fa8735ab71dcad8d2b431e52e8bf68d932',
           'Relevance/tokenizer.json': '62c24cdc13d4c9952d63718d6c9fa4c287974249e16b7ade6d5a85e7bbb75626'}
 
 def compile_assets():
-    paths = [RESOURCES / p for p in INPUTS]
-    source = [json.loads(p.read_bytes()) for p in paths]
-    # Always validate each source against its existing model manifest.
-    for path in paths:
-        manifest = json.loads((path.parent / 'MODEL_SOURCE.json').read_bytes())
-        assert hashlib.sha256(path.read_bytes()).hexdigest() == manifest['files'][path.name] == INPUTS[str(path.relative_to(RESOURCES))]
+    source = []
+    # Verify the offline reference files against the original model pins.
+    for directory in (pathlib.Path('.'), pathlib.Path('Relevance')):
+        manifest = json.loads((RESOURCES / directory / 'MODEL_SOURCE.json').read_bytes())
+        files = {}
+        for name, expected in manifest['referenceTokenizerFiles'].items():
+            files[name] = (REFERENCE / directory / name).read_bytes()
+            assert hashlib.sha256(files[name]).hexdigest() == expected
+        assert manifest['referenceTokenizerFiles']['tokenizer.json'] == INPUTS[str(directory / 'tokenizer.json')]
+        source.append(json.loads(files['tokenizer.json']))
     a, b = source
     assert a['model']['vocab'] == b['model']['vocab'] and a['model']['unk_id'] == b['model']['unk_id'] == 3
     assert a['model'].get('byte_fallback', False) is False and b['model'].get('byte_fallback', False) is False
@@ -59,7 +64,7 @@ def compile_assets():
              'Precompiled.charsmap': base64.b64decode(normalizer[0]['precompiled_charsmap'])}
     manifest = {'format': 'folio.scalar-unigram/1', 'compiler': 'Tools/SemanticAssets/compile_tokenizer.py',
                 'algorithmSource': 'huggingface/swift-transformers@1.4.0',
-                'inputs': {str(p.relative_to(RESOURCES)): hashlib.sha256(p.read_bytes()).hexdigest() for p in paths},
+                'inputs': INPUTS,
                 'nodes': len(children), 'vocabulary': len(vocabulary),
                 'files': {p: hashlib.sha256(data).hexdigest() for p, data in files.items()}}
     files['TOKENIZER_SOURCE.json'] = (json.dumps(manifest, ensure_ascii=False, indent=2) + '\n').encode()

@@ -71,13 +71,18 @@ struct WikiDocumentView: View {
     }
     .background(FolioTheme.paper(scheme)).tint(FolioTheme.accent(scheme))
     .sheet(item: $sendSource) { WikiNearbyView(model: model, window: window, source: $0) }
-    .sheet(item: savedPDFSelection) { saved in
-      if canPresentSavedPDF(saved) {
-        FolioKnowledgePDFView(preview: saved.preview)
+    .sheet(item: savedCitationSelection) { saved in
+      if canPresentSavedCitation(saved) {
+        switch saved.content {
+        case .markdown(let source, let sectionID, let location):
+          FolioKnowledgeMarkdownView(document: source, sectionID: sectionID, location: location)
+        case .pdf(let preview):
+          FolioKnowledgePDFView(preview: preview)
+        }
       }
     }
-    .onChange(of: model.workspaceGeneration) { _, _ in window.savedPDF = nil }
-    .onChange(of: model.hasOpenWorkspace) { _, open in if !open { window.savedPDF = nil } }
+    .onChange(of: model.workspaceGeneration) { _, _ in window.savedCitation = nil }
+    .onChange(of: model.hasOpenWorkspace) { _, open in if !open { window.savedCitation = nil } }
     .sheet(isPresented: $window.showConnections) {
       if let document {
         NavigationStack {
@@ -132,16 +137,16 @@ struct WikiDocumentView: View {
     }
   }
 
-  private var savedPDFSelection: Binding<WikiWindowState.SavedPDF?> {
+  private var savedCitationSelection: Binding<WikiWindowState.SavedCitation?> {
     Binding(get: {
-      guard let saved = window.savedPDF, canPresentSavedPDF(saved) else { return nil }
+      guard let saved = window.savedCitation, canPresentSavedCitation(saved) else { return nil }
       return saved
     }, set: { value in
-      if value == nil, window.savedPDF?.documentID == document?.id { window.savedPDF = nil }
+      if value == nil, window.savedCitation?.documentID == document?.id { window.savedCitation = nil }
     })
   }
 
-  private func canPresentSavedPDF(_ saved: WikiWindowState.SavedPDF) -> Bool {
+  private func canPresentSavedCitation(_ saved: WikiWindowState.SavedCitation) -> Bool {
     model.hasOpenWorkspace && model.workspaceGeneration == saved.workspaceGeneration
       && document?.id == saved.documentID && window.selectedDocumentID == saved.documentID
   }
@@ -185,7 +190,7 @@ struct WikiDocumentView: View {
           || document.map { model.savingDocuments.contains($0.id) } == true)
         .keyboardShortcut("s", modifiers: .command)
     } else {
-      Button(draft?.isDirty == true ? "편집 이어쓰기" : (document.flatMap(FolioAttachmentNotes.originalPDF(in:)) == nil ? "편집" : "노트 편집"),
+      Button(draft?.isDirty == true ? "편집 이어쓰기" : (document.flatMap(WikiAttachmentImport.unmodifiedPDFPath(in:)) == nil ? "편집" : "노트 편집"),
         systemImage: "pencil") { window.editorStartsAtEnd = false; window.isEditing = true }
         .labelStyle(.titleOnly)
         .disabled(!model.hasOpenWorkspace || draft == nil)
@@ -219,7 +224,7 @@ struct WikiDocumentView: View {
         Button("이 자료에 질문", systemImage: "text.bubble") { knowledgeDocumentID = document.id }
           .disabled(!model.hasOpenWorkspace).accessibilityIdentifier("knowledge-document-open")
         Button("연결된 문서", systemImage: "link") { window.showConnections = true }
-        if FolioAttachmentNotes.originalPDF(in: document) == nil { attachmentMenu(for: document) }
+        if WikiAttachmentImport.unmodifiedPDFPath(in: document) == nil { attachmentMenu(for: document) }
       }
       if let document {
         Button("문서 정보", systemImage: "info.circle") { showInformation(for: document) }

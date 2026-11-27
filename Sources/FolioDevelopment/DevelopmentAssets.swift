@@ -6,15 +6,14 @@ enum DevelopmentAssets {
   }
 
   static func copies(_ request: DevelopmentRequest) -> [(source: URL, destination: URL)] {
-    var result: [(URL, URL)] = []
-    for variant in DevelopmentIconLayout.variants {
-      let destination = request.root.appendingPathComponent("Apps/Assets.xcassets/\(variant.catalog).appiconset")
-      result.append((request.root.appendingPathComponent("Assets/" + variant.iosFilename), destination.appendingPathComponent("\(variant.name)-1024.png")))
-      for size in DevelopmentIconLayout.catalogSizes {
-        for scale in [1, 2] {
-          result.append((request.root.appendingPathComponent("Assets/" + variant.rasterFilename(size: size * scale)),
-            destination.appendingPathComponent("\(variant.name)-mac-\(size)@\(scale)x.png")))
-        }
+    let source = request.root.appendingPathComponent("Assets")
+    let destination = request.root.appendingPathComponent("Apps/Assets.xcassets/" + DevelopmentIconLayout.catalogName)
+    var result = [(source.appendingPathComponent(DevelopmentIconLayout.iosFilename),
+      destination.appendingPathComponent(DevelopmentIconLayout.iosCatalogFilename))]
+    for size in DevelopmentIconLayout.catalogSizes {
+      for scale in [1, 2] {
+        result.append((source.appendingPathComponent(DevelopmentIconLayout.rasterFilename(size: size * scale)),
+          destination.appendingPathComponent(DevelopmentIconLayout.catalogFilename(size: size, scale: scale))))
       }
     }
     return result
@@ -41,28 +40,27 @@ enum DevelopmentAssets {
 
   private static func commands(_ request: DevelopmentRequest, renderer: URL) -> [DevelopmentCommand] {
     let root = request.root
-    var result = [DevelopmentPlan.command(request, "/usr/bin/xcrun", ["swiftc", "-parse-as-library", "-swift-version", "6",
+    let assets = root.appendingPathComponent("Assets")
+    return [DevelopmentPlan.command(request, "/usr/bin/xcrun", ["swiftc", "-parse-as-library", "-swift-version", "6",
       root.appendingPathComponent("Sources/FolioDevelopment/DevelopmentIconLayout.swift").path,
       root.appendingPathComponent("Sources/FolioUI/FolioTheme.swift").path,
       root.appendingPathComponent("script/render_assets.swift").path, "-o", renderer.path]),
-      DevelopmentPlan.command(request, renderer.path, [root.appendingPathComponent("Assets").path])]
-    for variant in DevelopmentIconLayout.variants {
-      result.append(DevelopmentPlan.command(request, "/usr/bin/iconutil", ["-c", "icns",
-        root.appendingPathComponent("Assets/\(variant.iconName).iconset").path, "-o", root.appendingPathComponent("Assets/\(variant.iconName).icns").path]))
-    }
-    return result
+      DevelopmentPlan.command(request, renderer.path, [assets.path]),
+      DevelopmentPlan.command(request, "/usr/bin/iconutil", ["-c", "icns",
+        assets.appendingPathComponent(DevelopmentIconLayout.iconsetName).path,
+        "-o", assets.appendingPathComponent(DevelopmentIconLayout.icnsFilename).path])]
   }
 
   private static func validate(_ request: DevelopmentRequest) throws {
+    let assets = request.root.appendingPathComponent("Assets")
+    let iconset = assets.appendingPathComponent(DevelopmentIconLayout.iconsetName)
     var outputs = copies(request).map(\.destination)
-    for variant in DevelopmentIconLayout.variants {
-      outputs.append(request.root.appendingPathComponent("Assets/\(variant.iconName).icns"))
-      outputs.append(request.root.appendingPathComponent("Assets/" + variant.iosFilename))
-      for size in DevelopmentIconLayout.rasterSizes {
-        outputs.append(request.root.appendingPathComponent("Assets/" + variant.rasterFilename(size: size)))
-        for name in DevelopmentIconLayout.iconsetFilenames(size: size) {
-          outputs.append(request.root.appendingPathComponent("Assets/\(variant.iconName).iconset/" + name))
-        }
+    outputs.append(assets.appendingPathComponent(DevelopmentIconLayout.icnsFilename))
+    outputs.append(assets.appendingPathComponent(DevelopmentIconLayout.iosFilename))
+    for size in DevelopmentIconLayout.rasterSizes {
+      outputs.append(assets.appendingPathComponent(DevelopmentIconLayout.rasterFilename(size: size)))
+      for name in DevelopmentIconLayout.iconsetFilenames(size: size) {
+        outputs.append(iconset.appendingPathComponent(name))
       }
     }
     for output in outputs { try DevelopmentPaths.validate(output, root: request.root) }

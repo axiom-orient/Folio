@@ -12,18 +12,16 @@ import SwiftUI
     let macMaster = try renderMaster(rounded: true)
     let iosMaster = try makeOpaque(renderMaster(rounded: false))
 
-    for variant in DevelopmentIconLayout.variants {
-      let iconset = root.appendingPathComponent("\(variant.iconName).iconset", isDirectory: true)
-      try FileManager.default.createDirectory(at: iconset, withIntermediateDirectories: true)
-      for size in DevelopmentIconLayout.rasterSizes {
-        let raster = try downsample(macMaster, to: size)
-        try writePNG(raster, to: root.appendingPathComponent(variant.rasterFilename(size: size)))
-        for name in DevelopmentIconLayout.iconsetFilenames(size: size) {
-          try writePNG(raster, to: iconset.appendingPathComponent(name))
-        }
+    let iconset = root.appendingPathComponent(DevelopmentIconLayout.iconsetName, isDirectory: true)
+    try FileManager.default.createDirectory(at: iconset, withIntermediateDirectories: true)
+    for size in DevelopmentIconLayout.rasterSizes {
+      let raster = try downsample(macMaster, to: size)
+      try writePNG(raster, to: root.appendingPathComponent(DevelopmentIconLayout.rasterFilename(size: size)))
+      for name in DevelopmentIconLayout.iconsetFilenames(size: size) {
+        try writePNG(raster, to: iconset.appendingPathComponent(name))
       }
-      try writePNG(iosMaster, to: root.appendingPathComponent(variant.iosFilename))
     }
+    try writePNG(iosMaster, to: root.appendingPathComponent(DevelopmentIconLayout.iosFilename))
   }
 
   @MainActor private static func renderMaster(rounded: Bool) throws -> CGImage {

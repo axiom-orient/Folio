@@ -25,7 +25,7 @@ struct WikiSearchTools: View {
         .accessibilityIdentifier("knowledge-search-open")
         Spacer(minLength: 4)
         Menu {
-          Button("뜻으로 찾기", systemImage: "sparkle.magnifyingglass") {
+          Button("노트에서 뜻으로 찾기", systemImage: "sparkle.magnifyingglass") {
             beforePresentation()
             showSemantic = true
           }

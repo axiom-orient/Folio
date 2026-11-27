@@ -107,7 +107,7 @@ struct FolioSemanticReviewView: View {
           searchField.padding(.horizontal, 24).padding(.top, 12).padding(.bottom, 8).background(.background)
         }
       }
-      .navigationTitle(document == nil ? "뜻으로 찾기" : "연결 제안")
+      .navigationTitle(document == nil ? "노트에서 뜻으로 찾기" : "연결 제안")
       .toolbar {
         ToolbarItem(placement: .cancellationAction) { Button("닫기") { task?.cancel(); dismiss() }.disabled(writing) }
         ToolbarItem(placement: .primaryAction) {

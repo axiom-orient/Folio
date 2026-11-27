@@ -52,9 +52,9 @@ SDK는 기존 Folio 앱의 Application Support·UserDefaults·Keychain을 탐색
 
 `search(query)`는 처음 50개 결과를 반환하는 편의 API입니다. 전체 결과는 `searchPage(query, continuation:)`의 `nextContinuation`이 없어질 때까지 이어서 조회합니다. 각 페이지는 전체 개수, 검색 범위의 완전성, 진단을 반환합니다. continuation은 세션·검색어·원문 버전·정렬에 묶이며 원문이 바뀌면 재검색을 요구합니다. SDK UI는 더 보기와 불완전 검색 안내를 표시합니다.
 
-`prepareKnowledgeIndex()`와 `knowledgeAnswer(_:documentID:)`는 Markdown과 문서에 연결된 텍스트 PDF를 전체 블록 색인에서 검색합니다. `documentID`를 주면 해당 문서와 연결된 PDF만 조회하며 존재하지 않는 범위를 전체 자료함으로 확대하지 않습니다. SDK 세션의 이 경로는 모델이나 네트워크를 활성화하지 않습니다. 기존 Folio 앱의 선택형 뜻 검색은 별도 `WikiSearchService` 모델 주입을 사용합니다.
+`prepareKnowledgeIndex()`와 `knowledgeAnswer(_:documentID:)`는 Markdown과 문서에 연결된 PDF를 블록 색인에서 검색합니다. 기기 내 Apple Vision으로 스캔 페이지와 본문이 있는 페이지의 이미지 영역을 읽습니다. `documentID`를 지정하면 해당 문서와 연결된 PDF로 범위를 제한합니다. 기본 검색은 네트워크 없이 동작합니다. Folio 앱의 선택형 뜻 검색은 별도 `WikiSearchService` 모델 주입을 사용합니다.
 
-반환되는 `WikiKnowledgeAnswer.evidence`는 생성형 답변이 아닌 현재 원문 인용입니다. `coverage`의 추출 누락·검색 범위를 함께 표시해야 합니다. `readKnowledgeEvidence(_:)`와 `previewKnowledgePDF(_:)`는 원문 권한과 revision을 다시 검사합니다. PDF 미리보기는 검증된 Data snapshot과 페이지·영역 좌표이며 원본 URL 쓰기 권한을 제공하지 않습니다. 원문 폴더 변경·계정 접근 상실·세션 닫힘 뒤 기존 인용으로 새 원문 읽기를 수행할 수 없습니다. 여러 자료의 검사는 전역 원자적 snapshot이 아닙니다.
+`WikiKnowledgeAnswer.evidence`는 원문 기반의 검색 결과입니다. `pdfRegion?.kind == .ocrUnreviewed`인 항목에는 스캔 인식 표시를 붙이고 `coverage`의 추출 누락·검색 범위를 함께 표시합니다. `readKnowledgeEvidence(_:)`와 `previewKnowledgePDF(_:)`는 원문 권한과 revision을 다시 검사합니다. PDF 미리보기는 검증된 Data snapshot과 페이지·영역 좌표를 제공합니다. 원문 폴더 변경·계정 접근 상실·세션 닫힘 뒤 기존 인용으로 새 원문 읽기를 수행할 수 없습니다. 여러 자료는 순서대로 검사합니다. [PDF 추출과 원문 확인](PDF_EVIDENCE.md)
 
 ## 편집·저장·복구
 

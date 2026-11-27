@@ -1,4 +1,5 @@
 import FolioKnowledge
+import FolioKnowledgeApple
 import SwiftUI
 
 struct WikiDocumentLabel: View {
@@ -34,7 +35,7 @@ struct WikiDocumentLabel: View {
   }
   private var supportingColor: Color { isSelected ? FolioTheme.text(scheme) : FolioTheme.muted(scheme) }
   private var preview: String {
-    if FolioAttachmentNotes.originalPDF(in: document) != nil { return "PDF" }
+    if WikiAttachmentImport.unmodifiedPDFPath(in: document) != nil { return "PDF" }
     let line = document.sections.lazy.flatMap { $0.sourceText.components(separatedBy: "\n") }
       .map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
       .first { !$0.isEmpty && !$0.hasPrefix("#") && !$0.hasPrefix("```") && !$0.hasPrefix("|")

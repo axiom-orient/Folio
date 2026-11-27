@@ -111,6 +111,33 @@ import FolioKnowledgeApple
     #expect(try await engine.answer("파생전용단어").evidence.isEmpty)
     #expect(try await fixture.workspace.source(relativePath: path) == derived)
   }
+
+  @Test func generatedPDFCompanionDoesNotSupplyFilenameEvidence() async throws {
+    let fixture = try EvidenceFixture(); defer { fixture.remove() }
+    let id = "f9ae61c9-70db-4762-a0e4-afddb47b0a12"
+    let filename = "filenameonly.pdf"
+    let path = "attachments/\(id)-\(filename)"
+    let noteURL = fixture.root.appendingPathComponent("notes/book.md")
+    let pdfURL = fixture.root.appendingPathComponent(path)
+    let original = try fixture.pdf("Photosynthesis converts energy.")
+    try original.write(to: pdfURL)
+    let companion = WikiAttachmentImport.noteSource(id: id, filename: filename, link: "../" + path)
+    try Data(companion.utf8).write(to: noteURL)
+
+    let engine = WikiKnowledgeQuery(workspace: fixture.workspace)
+    let inventory = try await fixture.workspace.knowledgeInventory()
+    #expect(inventory.sources.map(\.kind) == [.pdf])
+    #expect(try await engine.answer("filenameonly", documentID: id).evidence.isEmpty)
+    #expect(try await engine.answer("Photosynthesis", documentID: id).evidence.map(\.source.kind) == [.pdf])
+    #expect(try Data(contentsOf: pdfURL) == original)
+
+    try FileManager.default.removeItem(at: pdfURL)
+    let missing = try await engine.answer("filenameonly", documentID: id)
+    #expect(missing.evidence.isEmpty && !missing.coverage.complete)
+
+    try Data((companion + "\n사용자주석은 자료를 읽은 뒤 작성했습니다.\n").utf8).write(to: noteURL)
+    #expect(try await engine.answer("사용자주석은", documentID: id).evidence.map(\.source.kind) == [.markdown])
+  }
 }
 
 private struct EvidenceFixture {

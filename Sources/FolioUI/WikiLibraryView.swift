@@ -54,7 +54,7 @@ struct WikiLibraryView: View {
   #endif
   private enum Page: Hashable { case create, manage }
   private enum ImportPurpose: Hashable {
-    case workspace, document, attachment, sendFile
+    case workspace, attachment, sendFile
     #if os(macOS)
     case open, createFolder
     #endif
@@ -106,16 +106,12 @@ struct WikiLibraryView: View {
             guard let url = urls.first else { return }
             if purpose == .sendFile { sendSource = .file(url); return }
             perform {
-              if purpose == .document || purpose == .attachment {
+              switch purpose {
+              case .attachment:
                 guard let expectedTarget, model.receivedFileTarget == expectedTarget else {
                   model.message = "자료함이 바뀌었습니다. 추가할 자료함에서 파일을 다시 선택하세요."; return
                 }
-              }
-              switch purpose {
-              case .attachment:
-                if let expectedTarget { await model.captureAttachment(url, in: window, expectedTarget: expectedTarget) }
-              case .document:
-                if let expectedTarget { await model.importSource(url, in: window, expectedTarget: expectedTarget) }
+                await model.captureAttachment(url, in: window, expectedTarget: expectedTarget)
               case .workspace: await model.importWorkspaceSource(url, in: window)
               case .sendFile: break
               #if os(macOS)
@@ -174,7 +170,6 @@ struct WikiLibraryView: View {
       photo = nil
       showPhotoPicker = true
     #endif
-    case .importDocument: chooseImport(.document)
     case .attachment: chooseImport(.attachment)
     case .sendFile: chooseImport(.sendFile)
     case .sendArchive: if let archive = model.archiveShare { sendSource = .archive(archive) }
@@ -199,7 +194,7 @@ struct WikiLibraryView: View {
   }
 
   private func chooseImport(_ purpose: ImportPurpose) {
-    if purpose == .document || purpose == .attachment {
+    if purpose == .attachment {
       guard let target = model.receivedFileTarget else {
         model.message = "자료함이 준비되면 파일을 다시 선택하세요."
         return
@@ -213,7 +208,6 @@ struct WikiLibraryView: View {
     switch purpose {
     case .attachment, .sendFile: [.item]
     case .workspace: [.folder, .zip]
-    case .document: WikiFilePicker.documentContentTypes
     #if os(macOS)
     case .open, .createFolder: [.folder]
     #endif

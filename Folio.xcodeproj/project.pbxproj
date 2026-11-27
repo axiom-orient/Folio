@@ -104,7 +104,6 @@
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
 		E2BC834730A0A86E00CE7350 /* FolioRuntimeChecks */ = {isa = PBXFileSystemSynchronizedRootGroup; explicitFileTypes = {}; explicitFolders = (); path = FolioRuntimeChecks; sourceTree = "<group>"; };
-		E2BC835730A0B0F100CE7350 /* FolioMacRuntimeChecks */ = {isa = PBXFileSystemSynchronizedRootGroup; explicitFileTypes = {}; explicitFolders = (); path = FolioMacRuntimeChecks; sourceTree = "<group>"; };
 		E2F5BB95307E4E0200AB4E24 /* FolioDeviceUITests */ = {isa = PBXFileSystemSynchronizedRootGroup; explicitFileTypes = {}; explicitFolders = (); path = FolioDeviceUITests; sourceTree = "<group>"; };
 /* End PBXFileSystemSynchronizedRootGroup section */
 
@@ -192,7 +191,6 @@
 				D4C242D5A57B70AE6D2F858A /* Apps/Assets.xcassets */,
 				E2F5BB95307E4E0200AB4E24 /* FolioDeviceUITests */,
 				E2BC834730A0A86E00CE7350 /* FolioRuntimeChecks */,
-				E2BC835730A0B0F100CE7350 /* FolioMacRuntimeChecks */,
 				B9E7F2871A3402983868AFC8 /* Products */,
 			);
 			sourceTree = "<group>";
@@ -300,7 +298,7 @@
 				E2A8E58D30A0B1D900751C2D /* PBXTargetDependency */,
 			);
 			fileSystemSynchronizedGroups = (
-				E2BC835730A0B0F100CE7350 /* FolioMacRuntimeChecks */,
+				E2BC834730A0A86E00CE7350 /* FolioRuntimeChecks */,
 			);
 			name = FolioMacRuntimeChecks;
 			packageProductDependencies = (

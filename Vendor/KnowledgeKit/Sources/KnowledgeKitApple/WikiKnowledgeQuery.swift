@@ -4,7 +4,9 @@ import FolioKnowledge
 /// Owns only a rebuildable index and query coordination. Source reads and final
 /// quotation checks remain on WikiWorkspace; models never acquire write access.
 public actor WikiKnowledgeQuery {
-  private static let producer = "folio.knowledge.v1." + WikiPDFExtractor.identifier + ".chunks.bytes800-1200.v2"
+  private static let markdownProducer = "folio.knowledge.v1." + WikiPDFExtractor.identifier + ".chunks.bytes800-1200.v2"
+  private static let pdfProducer = markdownProducer + ".regions.v1." + WikiPDFOCR.identifier
+    + "." + WikiPDFOCR.regionalIdentifier + "." + ProcessInfo.processInfo.operatingSystemVersionString
   private let workspace: WikiWorkspace
   private let embedding: (any WikiSemanticEmbedding)?
   private let relevance: (any WikiSemanticRelevance)?
@@ -70,11 +72,11 @@ public actor WikiKnowledgeQuery {
       throw WikiError.unavailable("뜻으로 찾기에는 검색 모델과 관련성 검사 모델이 모두 필요합니다.")
     }
     let prepared = try await prepareIndex()
+    if let documentID, !prepared.inventory.admittedDocumentIDs.contains(documentID) {
+      throw WikiError.invalidSource("선택한 자료가 현재 자료함에 없습니다.")
+    }
     let scope = documentID.map { selected in
       Set(prepared.inventory.sources.filter { $0.documentID == selected }.map(\.id))
-    }
-    if scope?.isEmpty == true {
-      throw WikiError.invalidSource("선택한 자료가 현재 자료함에 없습니다.")
     }
     let coverage = try await coverage(of: prepared, scope: scope)
     let indexedScope = scope.map { Set(prepared.records.keys).intersection($0) }
@@ -102,7 +104,7 @@ public actor WikiKnowledgeQuery {
         throw WikiError.invalidSource("검색 모델이 올바르지 않은 질문 벡터를 반환했습니다.")
       }
       let pipeline = "knowledge.vector.v1." + SourceDigest.sha256(try Self.json([
-        Self.producer, embedding.identifier, relevance.identifier, "normalized-dot.075.rerank.-3.gap2"
+        Self.markdownProducer, embedding.identifier, relevance.identifier, "normalized-dot.075.rerank.-3.gap2"
       ]))
       var candidates: [DenseCandidate] = []
       var cursor: Int64 = 0
@@ -239,7 +241,8 @@ public actor WikiKnowledgeQuery {
     var indexingFailures: [String: String] = [:]
     for source in inventory.sources {
       try Task.checkCancellation()
-      if let record = cached[source.id], record.revision == source.indexRevision, record.producer == Self.producer,
+      let producer = source.kind == .pdf ? Self.pdfProducer : Self.markdownProducer
+      if let record = cached[source.id], record.revision == source.indexRevision, record.producer == producer,
         let envelope = try? JSONDecoder().decode(Envelope.self, from: Data(record.payload.utf8)),
         envelope.source == source, envelope.unreadablePages >= 0 {
         records[source.id] = envelope
@@ -253,8 +256,10 @@ public actor WikiKnowledgeQuery {
             text: evidence.text, payload: try Self.json(evidence))
         }
         let envelope = Envelope(source: source, unreadablePages: material.unreadablePages)
+        // A transient OCR failure must not hide the file's readable pages or
+        // make that incomplete extraction a reusable index for later searches.
         let record = WikiKnowledgeDocumentRecord(id: source.id, revision: source.indexRevision,
-          producer: Self.producer, payload: try Self.json(envelope))
+          producer: material.recognitionFailed ? producer + ".retry-ocr" : producer, payload: try Self.json(envelope))
         try await workspace.projection.replaceKnowledgeDocument(record, blocks: blocks)
         records[source.id] = envelope
       } catch is CancellationError { throw CancellationError() }
@@ -280,7 +285,7 @@ public actor WikiKnowledgeQuery {
     // Keep those shared diagnostics rather than promising complete scoped results.
     var diagnostics = prepared.inventory.diagnostics
     diagnostics += prepared.indexingFailures.filter { scope?.contains($0.key) ?? true }.values.sorted()
-    if unreadable > 0 { diagnostics.append("텍스트를 읽을 수 없는 PDF \(unreadable)쪽이 있습니다. 이 버전은 OCR을 실행하지 않습니다.") }
+    if unreadable > 0 { diagnostics.append("글자를 모두 읽지 못한 PDF 페이지가 \(unreadable)쪽 있습니다.") }
     return WikiKnowledgeCoverage(sourceCount: records.count, blockCount: count,
       unreadablePages: unreadable, complete: diagnostics.isEmpty,
       semanticComplete: false, diagnostics: diagnostics)

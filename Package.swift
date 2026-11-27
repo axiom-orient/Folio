@@ -54,7 +54,7 @@ let package = Package(
       resources: [
         "LICENSE-E5.txt", "LICENSE-SwiftTransformers.txt", "MODEL_SOURCE.json",
         "MultilingualE5Small.mlpackage", "Precompiled.charsmap", "Relevance",
-        "TOKENIZER_SOURCE.json", "Unigram.foliotokens", "tokenizer.json", "tokenizer_config.json",
+        "TOKENIZER_SOURCE.json", "Unigram.foliotokens",
       ].map { .copy("Resources/\($0)") }),
     .target(name: "FolioCore", dependencies: ["FolioKnowledge", "FolioKnowledgeApple"]),
     .target(name: "FolioSDKUI", dependencies: ["FolioCore"]),
