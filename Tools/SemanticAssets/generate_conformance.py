@@ -2,7 +2,7 @@
 """Independent reference generator; requires tokenizers==0.22.2. Seed and cases are fixed."""
 import json, pathlib, random, hashlib, tokenizers
 if tokenizers.__version__ != '0.22.2': raise SystemExit('Install tokenizers==0.22.2 for the pinned reference.')
-r=pathlib.Path(__file__).resolve().parents[2]; d=r/'Sources/FolioSemanticModels/Resources'; e=tokenizers.Tokenizer.from_file(str(d/'tokenizer.json')); p=tokenizers.Tokenizer.from_file(str(d/'Relevance/tokenizer.json'))
+r=pathlib.Path(__file__).resolve().parents[2]; d=pathlib.Path(__file__).resolve().parent/'ReferenceTokenizers'; e=tokenizers.Tokenizer.from_file(str(d/'tokenizer.json')); p=tokenizers.Tokenizer.from_file(str(d/'Relevance/tokenizer.json'))
 randomizer=random.Random(623128); vocab=json.loads((d/'tokenizer.json').read_bytes())['model']['vocab']
 parts=['은행','이자','배관','수도꼭지','물방울','임베딩','승인','복구','원문','검색','가나다','가나다','café','cafe\u0301','▁\u0301','ｆｕｌｌｗｉｄｔｈ','①','\uff5e','𠮷','\u200d','\u200b','\u00a0','\t','\n','\r\n','  ','<s>','</s>','<pad>','<unk>','<mask>','< mask >','😅','👩🏽\u200d💻','\x00','\u0085','\u2028','\u2060','\ufffd']
 texts=['', ' ', '   ', '▁', '▁▁a', '가나다', 'a\x00b', 'query: <s> <mask> 😅']

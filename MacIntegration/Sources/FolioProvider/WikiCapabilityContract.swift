@@ -1,6 +1,7 @@
 import Foundation
 import SEMIControl
 import FolioKnowledge
+import FolioKnowledgeApple
 
 /// The public schema and runtime top-level input admission share one contract.
 /// Domain value validation remains with each capability and the source owner.
@@ -30,11 +31,59 @@ struct WikiCapabilityContract: Sendable {
     return try JSONDecoder().decode(T.self, from: data)
   }
 
+  /// The domain owns assertion fields. Keep its local references valid when
+  /// embedding that schema in the existing mutation envelope.
+  private static let assertionInputSchema: String = {
+    guard var assertion = try? JSONSerialization.jsonObject(with: Data(WikiKnowledgeAssertion.inputSchemaJSON.utf8)) as? [String: Any],
+      let definitions = assertion.removeValue(forKey: "$defs") as? [String: Any] else {
+      preconditionFailure("Invalid built-in assertion schema.")
+    }
+    let schema: [String: Any] = [
+      "type": "object", "additionalProperties": false,
+      "properties": [
+        "assertion": assertion,
+        "path": ["type": "string", "minLength": 1, "maxLength": 4096],
+        "expected_revision": ["type": "string", "pattern": "^[0-9a-f]{64}$"],
+        "expected_concept_revisions": [
+          "type": "object", "maxProperties": 64,
+          "propertyNames": ["minLength": 1, "maxLength": 512],
+          "additionalProperties": ["type": "string", "pattern": "^[0-9a-f]{64}$"],
+          "description": "When saving reviewed knowledge, pass currentConceptRevisions from assertion_review to reject a Concept changed after review."
+        ]
+      ],
+      "required": ["assertion"], "$defs": definitions
+    ]
+    guard let data = try? JSONSerialization.data(withJSONObject: schema, options: [.sortedKeys]) else {
+      preconditionFailure("Cannot encode the built-in assertion capability schema.")
+    }
+    return String(decoding: data, as: UTF8.self)
+  }()
+
   static let all: [Self] = [
     .init("wiki.search", "Find current source sections in this wiki; returns exact evidence references and explicit relations.",
       #"{"type":"object","properties":{"query":{"type":"string","minLength":1,"maxLength":512},"limit":{"type":"integer","minimum":1,"maximum":10}},"required":["query"],"additionalProperties":false}"#),
     .init("wiki.semantic_search", "Opt-in on-device Korean/English retrieval; no network. Returns scored exact references and explicit index budgets/partial coverage. Similarity is not truth or answerability.",
       #"{"type":"object","properties":{"query":{"type":"string","minLength":1,"maxLength":512},"limit":{"type":"integer","minimum":1,"maximum":20}},"required":["query"],"additionalProperties":false}"#),
+    .init("wiki.knowledge_search", "Find current Markdown/PDF quotations in one request, with optional document scope and opt-in local meaning search. Returns exact quotations and concept resolution, not a generated answer or truth certification.",
+      #"{"type":"object","properties":{"question":{"type":"string","minLength":1,"maxLength":8192},"document_id":{"type":"string","minLength":1,"maxLength":512},"use_semantic":{"type":"boolean"},"concept_id":{"type":"string","minLength":1,"maxLength":512}},"required":["question"],"additionalProperties":false}"#),
+    .init("wiki.read_knowledge_evidence", "Recheck one returned Markdown/PDF evidence object against its current admitted original. Preserves the exact source location and OCR provenance; does not modify source.",
+      #"{"type":"object","properties":{"evidence":{"type":"object"}},"required":["evidence"],"additionalProperties":false}"#),
+    .init("wiki.concept", "Read a concept directly by stable ID, including its reviewed labels and original evidence. Rechecks backing quotations; no model, graph traversal or generated answer is required.",
+      #"{"type":"object","properties":{"concept_id":{"type":"string","minLength":1,"maxLength":512}},"required":["concept_id"],"additionalProperties":false}"#),
+    .init("wiki.concept_operation", "Observe an existing concept save operation after a lost or uncertain response. Reports historical commit and current evidence separately; never replays the save.",
+      #"{"type":"object","properties":{"operation_id":{"type":"string","format":"uuid"}},"required":["operation_id"],"additionalProperties":false}"#),
+    .init("wiki.save_concept", "Prepare one source-backed concept and its reviewed labels/mentions for separate SEMI approval. Existing records require their current revision; no source changes until the same plan is approved and executed.",
+      #"{"type":"object","properties":{"concept":{"type":"object"},"path":{"type":"string","minLength":1,"maxLength":4096},"expected_revision":{"type":"string","pattern":"^[0-9a-f]{64}$"}},"required":["concept"],"additionalProperties":false}"#, mutation: true),
+    .init("wiki.assertion", "Read one assertion directly by stable ID with its conditions, literal quantity/unit, edition and exact original evidence. Rechecks the original source; adoption is not truth certification.",
+      #"{"type":"object","properties":{"assertion_id":{"type":"string","minLength":1,"maxLength":512}},"required":["assertion_id"],"additionalProperties":false}"#),
+    .init("wiki.assertion_review", "Read one saved assertion explicitly for review when connected concepts have changed. Original quotations must still be valid. Reports concept changes without rebinding, approval or admitting stale knowledge as current.",
+      #"{"type":"object","properties":{"assertion_id":{"type":"string","minLength":1,"maxLength":512}},"required":["assertion_id"],"additionalProperties":false}"#),
+    .init("wiki.assertions", "List current assertions, optionally filtered by concept, owning document, literal case-sensitive unit, edition label or text. Whole records fit the bounded response; omitted records and partial coverage are explicit. No model or generated answer is required.",
+      #"{"type":"object","properties":{"concept_id":{"type":"string","minLength":1,"maxLength":512},"document_id":{"type":"string","minLength":1,"maxLength":512},"unit":{"type":"string","minLength":1,"maxLength":1024},"edition":{"type":"string","minLength":1,"maxLength":1024},"query":{"type":"string","minLength":1,"maxLength":8192},"limit":{"type":"integer","minimum":1,"maximum":100}},"additionalProperties":false}"#),
+    .init("wiki.assertion_operation", "Observe an existing assertion save operation after a lost or uncertain response. Historical commit and current original-evidence state are separate; this never replays a source write.",
+      #"{"type":"object","properties":{"operation_id":{"type":"string","format":"uuid"}},"required":["operation_id"],"additionalProperties":false}"#),
+    .init("wiki.save_assertion", "Prepare one assertion with explicitly cited conditions, literal values/units and edition for separate SEMI approval. Existing records require their current revision; only the approved exact plan may execute.",
+      assertionInputSchema, mutation: true),
     .init("wiki.suggest_relations", "Generate reviewable local multilingual relation proposals for a stable document and a caller-selected ontology predicate. Does not modify Markdown; similarity does not establish predicate semantics.",
       #"{"type":"object","properties":{"document_id":{"type":"string"},"predicate":{"type":"string"},"limit":{"type":"integer","minimum":1,"maximum":10}},"required":["document_id","predicate"],"additionalProperties":false}"#),
     .init("wiki.relation_proposal", "Inspect a durable relation proposal and its current source/operation status after cancellation or a lost response. Does not replay changes.",

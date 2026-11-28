@@ -10,7 +10,9 @@
     "LICENSE.txt": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30",
     "reranker.mlpackage/Data/com.apple.CoreML/model.mlmodel": "3238d93dfd1cf08908ddfccd600c8f66ad2712addd9ebbcf58c589bfe4014dfc",
     "reranker.mlpackage/Data/com.apple.CoreML/weights/weight.bin": "d61da15c4f95857ec3523ae1b7bacd82fdb7e14a0b9c3a447734af177878b3ad",
-    "reranker.mlpackage/Manifest.json": "07e51b121fe484524698fff9b737693eaccd51a5a7717d895ed24fdad9309a30",
+    "reranker.mlpackage/Manifest.json": "07e51b121fe484524698fff9b737693eaccd51a5a7717d895ed24fdad9309a30"
+  },
+  "referenceTokenizerFiles": {
     "tokenizer.json": "62c24cdc13d4c9952d63718d6c9fa4c287974249e16b7ade6d5a85e7bbb75626",
     "tokenizer_config.json": "e7fbfbfa6347b4e414c1cee50d142e2c2f9a895dad68b068ae83a8b564c3837e"
   }

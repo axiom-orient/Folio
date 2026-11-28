@@ -10,6 +10,12 @@ import Testing
   #expect(WikiMarkdownReader.inlineSource(paragraph) == "첫 문장 다음 문장\n마지막 문장")
 }
 
+@Test func quotationPreviewShowsContentWithoutItsMarkdownContainer() {
+  #expect(FolioReadingExcerpt.documentLine("> \\# Heat handbook") == nil)
+  #expect(FolioReadingExcerpt.documentLine("> The flux coefficient is 42 W.") == "The flux coefficient is 42 W.")
+  #expect(FolioReadingExcerpt.documentLine("> \\> 5 W") == "> 5 W")
+}
+
 @Test @MainActor func inlineFormattingAndLinksSurviveLineBreaks() throws {
   let paragraph = try #require(Array(Document(parsing: "**중요**\n[연결](other.md)").children).first)
   let formatted = WikiMarkdownReader.inlineSource(paragraph)
@@ -75,12 +81,21 @@ func newDocumentKeepsTheLiteralTitle(_ title: String) throws {
 }
 
 @Test func attachmentKeepsItsFilenameAndLink() throws {
-  let name = "설계 [최종] #1.txt"
-  let target = "../attachments/id-%EC%84%A4%EA%B3%84%20%5B%EC%B5%9C%EC%A2%85%5D%20%231.txt"
-  let source = FolioInput.attachmentSource(id: "attachment-document", filename: name, link: target)
+  let name = "설계: [최종] #1.txt"
+  let path = "attachments/id-" + name
+  let target = try WikiPath.linkFromNotesDirectory(to: path)
+  #expect(target == "../attachments/id-%EC%84%A4%EA%B3%84%3A%20%5B%EC%B5%9C%EC%A2%85%5D%20%231.txt")
+  let source = WikiAttachmentImport.noteSource(id: "attachment-document", filename: name, link: target)
   let document = try WikiMarkdownParser.document(relativePath: "notes/attachment.md", bytes: Data(source.utf8))
   #expect(document.title == name)
   #expect(document.declarations.contains { $0.target == target })
+  #expect(WikiPath.resolveLink(target, from: document.relativePath) == path)
+  #expect(WikiPath.resolveLink("../attachments/id-%EC%84%A4%EA%B3%84:%20%5B%EC%B5%9C%EC%A2%85%5D%20%231.txt",
+    from: document.relativePath) == path)
+  #expect(WikiPath.resolveLink("#section:one", from: document.relativePath) == document.relativePath)
+  for invalid in ["https://example.com/doc", "https%3A%2F%2Fexample.com/doc", "../../outside.pdf", "%2Foutside.pdf"] {
+    #expect(WikiPath.resolveLink(invalid, from: document.relativePath) == nil)
+  }
 }
 
 @Test func namesRejectEmptyMultilineAndOversizedInput() {

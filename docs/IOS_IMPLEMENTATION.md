@@ -19,6 +19,8 @@ FolioIOS는 iPhone·iPad의 native SwiftUI 앱입니다. iOS 27을 대상으로 
 ./script/build_ios.sh --local-simulator
 ```
 
+이 명령은 개발팀 계정 없이 로컬 임시 서명을 적용합니다. Keychain을 사용하는 자료 준비도 Simulator에서 실행할 수 있도록 서명하며, 프로비저닝이나 실기기 설치는 요청하지 않습니다. 빌드한 앱의 설치·실행은 Xcode 또는 Simulator에서 별도로 수행합니다.
+
 기본 출력은 작업 트리 밖의 `~/Library/Developer/FolioBuilds/Development/<저장소 경로 digest>/IOSSimulator/Build/Products/Debug-iphonesimulator/FolioIOS.app`입니다. `DevelopmentPaths`가 저장소 경로별 캐시를 선택하며, `FOLIO_BUILD_ROOT`를 지정하면 그 아래의 `IOSSimulator/`를 사용합니다. 실행 도구가 실제 출력 경로를 표시합니다. local plist는 명시적 개발 설정으로 production App Group 실패를 숨기는 fallback이 아닙니다. 정식 iCloud·App Group 서명은 Folio.xcodeproj의 같은 Team/container/group을 사용합니다.
 
-Team 서명 iOS build와 실제 iPhone 15의 cloud 원문 읽기·명시 저장·초안 background/재실행·iPhone→Mac 전송을 확인했습니다. Mac→iPhone 수신·추가·보관과 두 기기의 오래된 편집 거부·명시 복구도 실기기에서 통과했습니다. iPad·IME matrix·VoiceOver·큰 글자·실제 OS cloud 충돌은 NOT_RUN입니다. [검증 범위](IMPLEMENTATION_STATUS.md), [실기기 절차](CORE_DEVICE_VERIFICATION.md), [직전 리뉴얼](History/IOS_IMPLEMENTATION-renewal-20261013.md)을 구분합니다.
+Team 서명 iOS build와 실제 iPhone 15의 cloud 원문 읽기·명시 저장·초안 background/재실행·iPhone→Mac 전송을 확인했습니다. Mac→iPhone 수신·추가·보관과 두 기기의 오래된 편집 거부·명시 복구도 실기기에서 통과했습니다. iPad·IME matrix·VoiceOver·큰 글자·실제 OS cloud 충돌은 NOT_RUN입니다. [검증 범위](RELEASE.md#검증-범위), 실기기 절차(로컬 보관: `docs/History/ReleaseCleanup-20261128/CORE_DEVICE_VERIFICATION.md`), 직전 리뉴얼(로컬 보관: `docs/History/IOS_IMPLEMENTATION-renewal-20261013.md`)을 구분합니다.

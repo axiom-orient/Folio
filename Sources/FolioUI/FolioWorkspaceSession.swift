@@ -3,6 +3,7 @@ import FolioSemanticModels
 import FolioKnowledge
 import FolioKnowledgeApple
 import Observation
+import OSLog
 
 /// Application projection and job lifetime for the selected workspace.
 /// WikiWorkspaceAccess retains sole ownership of filesystem access and leases.
@@ -21,6 +22,7 @@ final class FolioWorkspaceSession {
   private(set) var snapshot: WikiSnapshot?
   private(set) var openedSourceRoot: URL?
   private(set) var pendingAttachments: [WikiAttachmentImport] = []
+  private(set) var systemIndexDiagnostic: String?
   var isBusy = false
   private(set) var isSuspended = false
   var protectedDataAvailable: Bool { storageAccess.protectedDataAvailable }
@@ -96,6 +98,7 @@ final class FolioWorkspaceSession {
     didLoad: @MainActor (WikiSnapshot) throws -> Void
   ) async throws -> Int? {
     generation += 1
+    systemIndexDiagnostic = nil
     let current = generation
     requestedCloudDownloads = []
     pendingLocation = location
@@ -177,6 +180,7 @@ final class FolioWorkspaceSession {
     cloudLibrary.stop()
     prepare()
     generation += 1
+    systemIndexDiagnostic = nil
     let current = generation
     await jobs.drainRefresh()
     guard isCurrent(current) else { return }
@@ -199,6 +203,7 @@ final class FolioWorkspaceSession {
     cloudLibrary.stop()
     storageAccess.updateProtectedDataAvailability(protectedDataAvailable); isSuspended = true
     generation += 1; isBusy = false
+    systemIndexDiagnostic = nil
     checkpoint()
     jobs.cancel()
   }
@@ -296,9 +301,16 @@ final class FolioWorkspaceSession {
     jobs.scheduleIndex { [weak self] in
       do {
         try await applyIndex(service)
+        if let self, self.isCurrent(current) { self.systemIndexDiagnostic = nil }
       } catch is CancellationError {}
       catch {
-        if let self, self.isCurrent(current) { self.onMessage?("일반 검색을 사용할 수 있습니다. 시스템 검색: \(error.localizedDescription)") }
+        if let self, self.isCurrent(current) {
+          self.systemIndexDiagnostic = error.localizedDescription
+          // The app's source-backed search remains usable without the optional
+          // system index. Keep its technical diagnostic out of the reading flow.
+          Logger(subsystem: "com.axient.Folio", category: "search-index")
+            .notice("System index unavailable; local search remains active: \(String(describing: error), privacy: .private)")
+        }
       }
     }
   }

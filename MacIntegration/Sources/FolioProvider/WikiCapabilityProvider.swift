@@ -8,7 +8,13 @@ import FolioKnowledge
 public actor WikiCapabilityProvider: AppCapabilityProvider {
   public typealias Connection = SEMIAppIntegration.Connection
   public let service: WikiSearchService
-  private struct Prepared: Sendable { let capability: String; let edit: WikiPreparedEdit; let publicPlan: AppCapabilityPlan; let proposalID: String? }
+  private enum Mutation: Sendable { case source, relationProposal(String), concept, assertion }
+  private struct Prepared: Sendable {
+    let capability: String
+    let edit: WikiPreparedEdit
+    let publicPlan: AppCapabilityPlan
+    let mutation: Mutation
+  }
   private var prepared: [String: Prepared] = [:]
   private var calls: [UUID: Task<AutomationResult, any Error>] = [:]
   private var preparations: [UUID: Task<AppCapabilityPlan, any Error>] = [:]
@@ -54,6 +60,138 @@ public actor WikiCapabilityProvider: AppCapabilityProvider {
       struct Input: Decodable { let query: String; let limit: Int? }
       let request: Input = try contract.decode(input)
       return try encode(try await service.semanticSearch(request.query, limit: request.limit ?? 10))
+    case "wiki.knowledge_search":
+      struct Input: Decodable { let question: String; let document_id: String?; let use_semantic: Bool?; let concept_id: String? }
+      let request: Input = try contract.decode(input)
+      return try encode(try await service.knowledgeAnswer(request.question,
+        documentID: request.document_id, useSemantic: request.use_semantic ?? false, conceptID: request.concept_id))
+    case "wiki.read_knowledge_evidence":
+      struct Input: Decodable { let evidence: WikiKnowledgeEvidence }
+      let request: Input = try contract.decode(input)
+      _ = try await service.workspace.readKnowledgeEvidence(request.evidence)
+      return try encode(request.evidence)
+    case "wiki.concept":
+      struct Input: Decodable { let concept_id: String }
+      let request: Input = try contract.decode(input)
+      guard !request.concept_id.isEmpty, request.concept_id.utf8.count <= 512,
+        !request.concept_id.contains("\0") else { throw WikiError.invalidSource("Invalid concept ID.") }
+      let record = try await service.workspace.readKnowledgeConcept(id: request.concept_id)
+      struct Result: Encodable {
+        let concept: WikiKnowledgeConcept
+        let relativePath: String
+        let revision: String
+        let currentness: String
+        let atomicSnapshot = false
+      }
+      return try encode(Result(concept: record.concept, relativePath: record.relativePath,
+        revision: record.revision, currentness: record.concept.mentions.isEmpty ? "unknown" : "current"))
+    case "wiki.concept_operation":
+      struct Input: Decodable { let operation_id: UUID }
+      let request: Input = try contract.decode(input)
+      let status = try await service.workspace.knowledgeConceptOperationStatus(operationID: request.operation_id)
+      struct Result: Encodable {
+        let conceptID: String
+        let relativePath: String
+        let resultRevision: String
+        let operation: WikiOperationStatus
+        let sourceObserved: Bool
+        let currentness: String
+      }
+      return try encode(Result(conceptID: status.conceptID, relativePath: status.relativePath,
+        resultRevision: status.resultRevision, operation: status.operation,
+        sourceObserved: status.sourceObserved, currentness: status.currentness.rawValue))
+    case "wiki.assertion", "wiki.assertion_review":
+      struct Input: Decodable { let assertion_id: String }
+      let request: Input = try contract.decode(input)
+      guard !request.assertion_id.isEmpty, request.assertion_id.utf8.count <= 512,
+        !request.assertion_id.contains("\0") else { throw WikiError.invalidSource("Invalid assertion ID.") }
+      if capability == "wiki.assertion_review" {
+        let review = try await service.workspace.reviewKnowledgeAssertion(id: request.assertion_id)
+        struct ConceptChange: Encodable {
+          let conceptID: String
+          let name: String
+          let state: String
+          let currentConcept: WikiKnowledgeConcept?
+        }
+        struct Result: Encodable {
+          let purpose = "review"
+          let assertion: WikiKnowledgeAssertion
+          let relativePath: String
+          let revision: String
+          let originalEvidenceCurrent = true
+          let requiresConceptReview: Bool
+          let conceptChanges: [ConceptChange]
+          let currentConceptRevisions: [String: String]
+          let atomicSnapshot = false
+        }
+        return try encode(Result(assertion: review.record.assertion, relativePath: review.record.relativePath,
+          revision: review.record.revision, requiresConceptReview: review.requiresConceptReview,
+          conceptChanges: review.conceptChanges.map {
+            ConceptChange(conceptID: $0.conceptID, name: $0.name, state: $0.state.rawValue,
+              currentConcept: $0.currentConcept)
+          }, currentConceptRevisions: review.currentConceptRevisions))
+      }
+      let record = try await service.workspace.readKnowledgeAssertion(id: request.assertion_id)
+      return try encode(AssertionResult(record))
+    case "wiki.assertions":
+      struct Input: Decodable {
+        let concept_id: String?; let document_id: String?
+        let unit: String?; let edition: String?; let query: String?; let limit: Int?
+      }
+      let request: Input = try contract.decode(input)
+      let limit = request.limit ?? 20
+      guard (1...100).contains(limit),
+        [request.unit, request.edition].compactMap({ $0 }).allSatisfy({ $0.utf8.count <= 1024 }) else {
+        throw WikiError.invalidSource("Assertion list limit must be 1...100 and unit/edition filters at most 1,024 UTF-8 bytes.")
+      }
+      let inventory = try await service.workspace.knowledgeAssertionInventory(conceptID: request.concept_id,
+        documentID: request.document_id, unit: request.unit, edition: request.edition,
+        query: request.query, limit: limit)
+      struct Result: Encodable {
+        let assertions: [AssertionResult]
+        let fingerprint: String
+        let diagnostics: [String]
+        let complete: Bool
+        let diagnosticsTruncated: Bool
+        let atomicSnapshot = false
+      }
+      let budgetMessage = "일부 주장은 응답 크기 한도로 생략했습니다. 개념·문서·단위·판본으로 범위를 좁히거나 주장 ID로 조회해 주세요."
+      var diagnostics = Array(inventory.diagnostics.prefix(20))
+      var diagnosticsTruncated = diagnostics.count < inventory.diagnostics.count
+      // Keep whole diagnostics and whole assertion/evidence bundles; never trim quoted source fields.
+      while try json(diagnostics).utf8.count > 16 * 1024, !diagnostics.isEmpty {
+        diagnostics.removeLast(); diagnosticsTruncated = true
+      }
+      let header = Result(assertions: [], fingerprint: inventory.fingerprint,
+        diagnostics: diagnostics + [budgetMessage], complete: false, diagnosticsTruncated: diagnosticsTruncated)
+      var usedBytes = try json(header).utf8.count
+      var records: [AssertionResult] = []
+      for record in inventory.records {
+        let value = AssertionResult(record)
+        let additionalBytes = try json(value).utf8.count + (records.isEmpty ? 0 : 1)
+        guard usedBytes + additionalBytes <= 128 * 1024 else { break }
+        records.append(value); usedBytes += additionalBytes
+      }
+      let recordsTruncated = records.count < inventory.records.count
+      if recordsTruncated { diagnostics.append(budgetMessage) }
+      return try encode(Result(assertions: records, fingerprint: inventory.fingerprint,
+        diagnostics: diagnostics, complete: inventory.complete && !recordsTruncated && !diagnosticsTruncated,
+        diagnosticsTruncated: diagnosticsTruncated))
+    case "wiki.assertion_operation":
+      struct Input: Decodable { let operation_id: UUID }
+      let request: Input = try contract.decode(input)
+      let status = try await service.workspace.knowledgeAssertionOperationStatus(operationID: request.operation_id)
+      struct Result: Encodable {
+        let assertionID: String
+        let relativePath: String
+        let resultRevision: String
+        let operation: WikiOperationStatus
+        let sourceObserved: Bool
+        let currentness: String
+      }
+      return try encode(Result(assertionID: status.assertionID, relativePath: status.relativePath,
+        resultRevision: status.resultRevision, operation: status.operation,
+        sourceObserved: status.sourceObserved, currentness: status.currentness.rawValue))
     case "wiki.suggest_relations":
       struct Input: Decodable { let document_id: String; let predicate: String; let limit: Int? }
       let request: Input = try contract.decode(input)
@@ -128,13 +266,42 @@ public actor WikiCapabilityProvider: AppCapabilityProvider {
     let capability = contract.descriptor.id
     struct Input: Decodable { let path: String; let expected_revision: String?; let range: WikiSourceRange?; let replacement: String }
     let request: Input
-    var proposalID: String?
-    var proposalEdit: WikiPreparedEdit?
+    var mutation = Mutation.source
+    var domainEdit: WikiPreparedEdit?
     if capability == "wiki.accept_relation_proposal" {
       struct ProposalInput: Decodable { let proposal_id: String }
       let input: ProposalInput = try contract.decode(input)
       let edit = try await service.workspace.prepareRelationProposal(id: input.proposal_id, operationID: operationID)
-      proposalID = input.proposal_id; proposalEdit = edit
+      mutation = .relationProposal(input.proposal_id); domainEdit = edit
+      request = Input(path: edit.relativePath, expected_revision: edit.expectedRevision, range: nil, replacement: edit.after)
+    }
+    else if capability == "wiki.save_concept" {
+      struct ConceptInput: Decodable {
+        let concept: WikiKnowledgeConcept
+        let path: String?
+        let expected_revision: String?
+      }
+      let input: ConceptInput = try contract.decode(input)
+      let edit = try await service.workspace.prepareKnowledgeConcept(input.concept,
+        relativePath: input.path, expectedRevision: input.expected_revision, operationID: operationID)
+      mutation = .concept; domainEdit = edit
+      request = Input(path: edit.relativePath, expected_revision: edit.expectedRevision, range: nil, replacement: edit.after)
+    }
+    else if capability == "wiki.save_assertion" {
+      struct AssertionInput: Decodable {
+        let path: String?
+        let expected_revision: String?
+        let expected_concept_revisions: [String: String]?
+      }
+      let assertionRequest: AssertionInput = try contract.decode(input)
+      guard let payload = try WikiJSONValue.parse(Data(input.utf8)).objectValue?["assertion"] else {
+        throw WikiError.invalidSource("An assertion payload is required.")
+      }
+      let assertion = try WikiKnowledgeAssertion.decodeInput(payload.encoded())
+      let edit = try await service.workspace.prepareKnowledgeAssertion(assertion,
+        relativePath: assertionRequest.path, expectedRevision: assertionRequest.expected_revision,
+        expectedConceptRevisions: assertionRequest.expected_concept_revisions, operationID: operationID)
+      mutation = .assertion; domainEdit = edit
       request = Input(path: edit.relativePath, expected_revision: edit.expectedRevision, range: nil, replacement: edit.after)
     }
     else if capability == "wiki.edit" { request = try contract.decode(input) }
@@ -148,7 +315,7 @@ public actor WikiCapabilityProvider: AppCapabilityProvider {
         range: patch?.range ?? WikiSourceRange(lowerBound: 0, upperBound: 0, startLine: 1, endLine: 1), replacement: patch?.replacement ?? "")
     }
     let edit: WikiPreparedEdit
-    if let proposalEdit { edit = proposalEdit }
+    if let domainEdit { edit = domainEdit }
     else {
       edit = try await service.workspace.prepareEdit(relativePath: request.path,
         expectedRevision: request.expected_revision, range: request.range, replacement: request.replacement, operationID: operationID)
@@ -168,7 +335,7 @@ public actor WikiCapabilityProvider: AppCapabilityProvider {
     guard previewJSON.utf8.count <= 200000 else { throw WikiError.invalidSource("Use a narrow source patch for a large note.") }
     let plan = AppCapabilityPlan(token: UUID().uuidString,
       target: AppEffectTarget(id: "\(edit.workspaceID.uuidString)/\(SourceDigest.sha256(edit.relativePath))", revision: edit.expectedRevision), previewJSON: previewJSON)
-    prepared[plan.token] = Prepared(capability: capability, edit: edit, publicPlan: plan, proposalID: proposalID)
+    prepared[plan.token] = Prepared(capability: capability, edit: edit, publicPlan: plan, mutation: mutation)
     return plan
   }
 
@@ -179,14 +346,34 @@ public actor WikiCapabilityProvider: AppCapabilityProvider {
     let task = Task {
       // The domain keeps its operation intent/receipt separately from the disposable projection.
       let receipt: WikiWriteReceipt
-      if let id = stored.proposalID {
+      switch stored.mutation {
+      case .relationProposal(let id):
         receipt = try await self.service.workspace.executeRelationProposal(id: id, plan: stored.edit, idempotencyKey: idempotencyKey)
-      } else { receipt = try await self.service.workspace.execute(stored.edit, idempotencyKey: idempotencyKey) }
+      case .concept:
+        receipt = try await self.service.workspace.executeKnowledgeConcept(stored.edit, idempotencyKey: idempotencyKey)
+      case .assertion:
+        receipt = try await self.service.workspace.executeKnowledgeAssertion(stored.edit, idempotencyKey: idempotencyKey)
+      case .source:
+        receipt = try await self.service.workspace.execute(stored.edit, idempotencyKey: idempotencyKey)
+      }
       return try self.encode(receipt, committed: true)
     }
     calls[operationID] = task
     defer { calls.removeValue(forKey: operationID); prepared.removeValue(forKey: plan.token) }
     return try await task.value
+  }
+
+  /// The wire representation is the validated domain value, not its opaque future metadata.
+  private struct AssertionResult: Encodable {
+    let assertion: WikiKnowledgeAssertion
+    let relativePath: String
+    let revision: String
+    let currentness: String
+    let atomicSnapshot = false
+    init(_ record: WikiKnowledgeAssertionRecord) {
+      assertion = record.assertion; relativePath = record.relativePath; revision = record.revision
+      currentness = record.assertion.evidence.isEmpty ? "unknown" : "current"
+    }
   }
 
   public func cancel(operationID: UUID) async {

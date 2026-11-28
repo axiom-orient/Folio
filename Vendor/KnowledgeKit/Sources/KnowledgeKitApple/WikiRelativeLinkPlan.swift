@@ -12,7 +12,7 @@ enum WikiRelativeLinkPlan {
     let metadata = try WikiLinkSourceMetadata(bytes: bytes)
     for declaration in document.declarations where declaration.origin == .markdownLink {
       let target = declaration.target
-      guard !target.hasPrefix("#"), !target.contains(":"), !target.hasPrefix("/"), !target.contains("\\") else { continue }
+      guard !target.hasPrefix("#"), !target.contains("\\") else { continue }
       let split = target.firstIndex(where: { $0 == "#" || $0 == "?" }) ?? target.endIndex
       let path = String(target[..<split]); let suffix = String(target[split...])
       guard !path.isEmpty, let resolved = WikiPath.resolveLink(path, from: document.relativePath) else { continue }
@@ -94,7 +94,9 @@ enum WikiRelativeLinkPlan {
     let target = target.split(separator: "/").map(String.init)
     var shared = 0
     while shared < min(source.count, target.count), source[shared] == target[shared] { shared += 1 }
-    return (Array(repeating: "..", count: source.count - shared) + target.dropFirst(shared)).joined(separator: "/")
+    let components = Array(repeating: "..", count: source.count - shared) + target.dropFirst(shared)
+    let path = components.joined(separator: "/")
+    return components.first?.contains(":") == true ? "./" + path : path
   }
   private static func quote(_ path: String) -> String {
     path.addingPercentEncoding(withAllowedCharacters: CharacterSet(charactersIn: "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-._~/")) ?? path

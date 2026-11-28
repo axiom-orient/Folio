@@ -4,7 +4,9 @@ import FolioKnowledge
 /// Owns only a rebuildable index and query coordination. Source reads and final
 /// quotation checks remain on WikiWorkspace; models never acquire write access.
 public actor WikiKnowledgeQuery {
-  private static let producer = "folio.knowledge.v1." + WikiPDFExtractor.identifier + ".chunks.bytes800-1200.v2"
+  private static let markdownProducer = "folio.knowledge.v1." + WikiPDFExtractor.identifier + ".chunks.bytes800-1200.v2"
+  private static let pdfProducer = markdownProducer + ".regions.v1." + WikiPDFOCR.identifier
+    + "." + WikiPDFOCR.regionalIdentifier + "." + ProcessInfo.processInfo.operatingSystemVersionString
   private let workspace: WikiWorkspace
   private let embedding: (any WikiSemanticEmbedding)?
   private let relevance: (any WikiSemanticRelevance)?
@@ -57,33 +59,32 @@ public actor WikiKnowledgeQuery {
   }
 
   public func answer(_ question: String, documentID: String? = nil,
-    useSemantic: Bool = false
+    useSemantic: Bool = false, conceptID: String? = nil
   ) async throws -> WikiKnowledgeAnswer {
     try begin()
     defer { finish() }
     guard !question.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty,
       question.utf8.count <= 8_192, !question.contains("\0"),
-      documentID.map({ !$0.isEmpty && $0.utf8.count <= 512 && !$0.contains("\0") }) ?? true else {
+      documentID.map({ !$0.isEmpty && $0.utf8.count <= 512 && !$0.contains("\0") }) ?? true,
+      conceptID.map({ !$0.isEmpty && $0.utf8.count <= 512 && !$0.contains("\0") }) ?? true else {
       throw WikiError.invalidSource("질문은 비어 있지 않은 8,192 UTF-8 bytes 이하 문자열이어야 합니다.")
     }
     if useSemantic, embedding == nil || relevance == nil {
       throw WikiError.unavailable("뜻으로 찾기에는 검색 모델과 관련성 검사 모델이 모두 필요합니다.")
     }
-    let prepared = try await prepareIndex()
-    let scope = documentID.map { selected in
-      Set(prepared.inventory.sources.filter { $0.documentID == selected }.map(\.id))
-    }
-    if scope?.isEmpty == true {
-      throw WikiError.invalidSource("선택한 자료가 현재 자료함에 없습니다.")
-    }
-    let coverage = try await coverage(of: prepared, scope: scope)
-    let indexedScope = scope.map { Set(prepared.records.keys).intersection($0) }
+    let prepared = try await prepareIndex(documentID: documentID)
+    let coverage = try await coverage(of: prepared)
+    // Even a whole-library query uses its successfully prepared sources rather
+    // than nil, which would grant every row left in the database query authority.
+    let indexedScope = Set(prepared.records.keys)
     let lexicalBlocks = try await workspace.projection.searchKnowledgeBlocks(question, sourceIDs: indexedScope, limit: 60)
     var seenAnchors = Set<Anchor>()
     let lexical = try lexicalBlocks.compactMap { block -> WikiKnowledgeEvidence? in
       let evidence = try Self.evidence(block, records: prepared.records)
       return seenAnchors.insert(Anchor(evidence)).inserted ? evidence : nil
     }
+    let concepts = try await WikiKnowledgeConceptLookup.prepare(workspace: workspace, query: question,
+      sources: prepared.records.mapValues(\.source), conceptID: conceptID)
     var diagnostics = coverage.diagnostics
     var semanticComplete = false
     let selected: [WikiKnowledgeEvidence]
@@ -102,7 +103,7 @@ public actor WikiKnowledgeQuery {
         throw WikiError.invalidSource("검색 모델이 올바르지 않은 질문 벡터를 반환했습니다.")
       }
       let pipeline = "knowledge.vector.v1." + SourceDigest.sha256(try Self.json([
-        Self.producer, embedding.identifier, relevance.identifier, "normalized-dot.075.rerank.-3.gap2"
+        Self.markdownProducer, embedding.identifier, relevance.identifier, "normalized-dot.075.rerank.-3.gap2"
       ]))
       var candidates: [DenseCandidate] = []
       var cursor: Int64 = 0
@@ -152,7 +153,7 @@ public actor WikiKnowledgeQuery {
       }
       semanticComplete = skipped == 0 && coverage.complete
       if skipped > 0 { diagnostics.append("의미 검색에서 토큰 한도를 넘은 \(skipped)개 구간은 제외했습니다. 원문 검색은 유지됩니다.") }
-      let pool = Self.relevanceCandidates(lexical: lexical, dense: candidates.map(\.evidence))
+      let pool = Self.relevanceCandidates(lexical: lexical, dense: candidates.map(\.evidence), concepts: concepts.evidence)
       let passages = pool.map(\.text)
       let scores: [Double?]
       if passages.isEmpty { scores = [] }
@@ -177,7 +178,7 @@ public actor WikiKnowledgeQuery {
       }
       selected = ranked.prefix(10).map { pool[$0.rank] }
     } else {
-      selected = Array(lexical.prefix(10))
+      selected = Self.relevanceCandidates(lexical: lexical, dense: [], concepts: concepts.evidence).prefix(10).map { $0 }
     }
     if !selected.isEmpty {
       _ = try await workspace.readKnowledgeEvidence(selected)
@@ -185,22 +186,30 @@ public actor WikiKnowledgeQuery {
     // Source checks are segmented, not an atomic multi-file snapshot. Recheck
     // the entire admitted corpus before publishing, including unrelated files.
     try await validate(prepared)
+    try await concepts.validate(in: workspace)
     let resultCoverage = WikiKnowledgeCoverage(sourceCount: coverage.sourceCount,
       blockCount: coverage.blockCount, unreadablePages: coverage.unreadablePages,
       complete: coverage.complete, semanticComplete: semanticComplete, diagnostics: diagnostics)
     return WikiKnowledgeAnswer(question: question, evidence: selected, coverage: resultCoverage,
-      semanticUsed: useSemantic, documentID: documentID)
+      semanticUsed: useSemantic, documentID: documentID, concepts: concepts.resolution)
   }
 
   /// Compare rank positions rather than mixing incomparable BM25 and cosine
   /// scores. Both paths contribute within MiniLM's one-request candidate budget.
-  private static func relevanceCandidates(lexical: [WikiKnowledgeEvidence], dense: [WikiKnowledgeEvidence]) -> [WikiKnowledgeEvidence] {
+  private static func relevanceCandidates(lexical: [WikiKnowledgeEvidence], dense: [WikiKnowledgeEvidence],
+    concepts: [WikiKnowledgeEvidence]) -> [WikiKnowledgeEvidence] {
     let rankConstant = 60.0
     var candidates: [Anchor: (evidence: WikiKnowledgeEvidence, weight: Double)] = [:]
-    for list in [lexical, dense] {
-      for (rank, evidence) in list.enumerated() {
+    for list in [lexical, dense, concepts] {
+      var seen = Set<Anchor>()
+      var rank = 0
+      for evidence in list {
         let key = Anchor(evidence)
+        // Several notes can own the same PDF. One arm gets only one vote for
+        // an original location, while the displayed citation retains its owner.
+        guard seen.insert(key).inserted else { continue }
         let weight = 1.0 / (rankConstant + Double(rank + 1))
+        rank += 1
         if let previous = candidates[key] { candidates[key] = (previous.evidence, previous.weight + weight) }
         else { candidates[key] = (evidence, weight) }
       }
@@ -230,18 +239,31 @@ public actor WikiKnowledgeQuery {
     if releaseWhenIdle { Task { await self.releaseResources() } }
   }
 
-  private func prepareIndex() async throws -> Prepared {
+  private func prepareIndex(documentID: String? = nil) async throws -> Prepared {
     let storeID = try await workspace.projection.storeID()
     let inventory = try await workspace.knowledgeInventory()
+    if let documentID, !inventory.admittedDocumentIDs.contains(documentID) {
+      throw WikiError.invalidSource("선택한 자료가 현재 자료함에 없습니다.")
+    }
     let previous = try await workspace.projection.knowledgeDocuments()
     let cached = Dictionary(previous.map { ($0.id, $0) }, uniquingKeysWith: { first, _ in first })
     var records: [String: Envelope] = [:]
     var indexingFailures: [String: String] = [:]
+    var retained = Set<String>()
     for source in inventory.sources {
       try Task.checkCancellation()
-      if let record = cached[source.id], record.revision == source.indexRevision, record.producer == Self.producer,
-        let envelope = try? JSONDecoder().decode(Envelope.self, from: Data(record.payload.utf8)),
-        envelope.source == source, envelope.unreadablePages >= 0 {
+      let producer = source.kind == .pdf ? Self.pdfProducer : Self.markdownProducer
+      let envelope: Envelope?
+      if let record = cached[source.id], record.revision == source.indexRevision, record.producer == producer,
+        let decoded = try? JSONDecoder().decode(Envelope.self, from: Data(record.payload.utf8)),
+        decoded.source == source, decoded.unreadablePages >= 0 {
+        envelope = decoded
+        retained.insert(source.id)
+      } else { envelope = nil }
+      // A scoped query keeps valid caches outside its scope without extracting
+      // those sources. Such caches do not become part of Prepared.records.
+      guard documentID == nil || source.documentID == documentID else { continue }
+      if let envelope {
         records[source.id] = envelope
         continue
       }
@@ -253,34 +275,37 @@ public actor WikiKnowledgeQuery {
             text: evidence.text, payload: try Self.json(evidence))
         }
         let envelope = Envelope(source: source, unreadablePages: material.unreadablePages)
+        // A transient OCR failure must not hide the file's readable pages or
+        // make that incomplete extraction a reusable index for later searches.
         let record = WikiKnowledgeDocumentRecord(id: source.id, revision: source.indexRevision,
-          producer: Self.producer, payload: try Self.json(envelope))
+          producer: material.recognitionFailed ? producer + ".retry-ocr" : producer, payload: try Self.json(envelope))
         try await workspace.projection.replaceKnowledgeDocument(record, blocks: blocks)
         records[source.id] = envelope
+        retained.insert(source.id)
       } catch is CancellationError { throw CancellationError() }
       catch WikiError.changedSource { throw WikiError.changedSource }
       catch { indexingFailures[source.id] = "\(source.title): 자료를 준비할 수 없습니다. \(error.localizedDescription)" }
     }
-    if !Set(cached.keys).isSubset(of: records.keys) {
-      try await workspace.projection.retainKnowledgeDocuments(Set(records.keys))
+    if !Set(cached.keys).isSubset(of: retained) {
+      try await workspace.projection.retainKnowledgeDocuments(retained)
     }
     return Prepared(inventory: inventory, records: records, indexingFailures: indexingFailures, storeID: storeID)
   }
 
-  private func coverage(of prepared: Prepared, scope: Set<String>? = nil) async throws -> WikiKnowledgeCoverage {
-    let records = prepared.records.filter { scope?.contains($0.key) ?? true }
+  private func coverage(of prepared: Prepared) async throws -> WikiKnowledgeCoverage {
+    let records = prepared.records
     var unreadable = 0
     for record in records.values {
       let sum = unreadable.addingReportingOverflow(record.unreadablePages)
       guard !sum.overflow else { throw WikiError.database("Invalid cached PDF coverage; rebuild the projection.") }
       unreadable = sum.partialValue
     }
-    let count = try await workspace.projection.knowledgeBlockCount(sourceIDs: scope.map { _ in Set(records.keys) })
+    let count = try await workspace.projection.knowledgeBlockCount(sourceIDs: Set(records.keys))
     // Inventory failures can hide an entire source before it has a source ID.
     // Keep those shared diagnostics rather than promising complete scoped results.
     var diagnostics = prepared.inventory.diagnostics
-    diagnostics += prepared.indexingFailures.filter { scope?.contains($0.key) ?? true }.values.sorted()
-    if unreadable > 0 { diagnostics.append("텍스트를 읽을 수 없는 PDF \(unreadable)쪽이 있습니다. 이 버전은 OCR을 실행하지 않습니다.") }
+    diagnostics += prepared.indexingFailures.values.sorted()
+    if unreadable > 0 { diagnostics.append("글자를 모두 읽지 못한 PDF 페이지가 \(unreadable)쪽 있습니다.") }
     return WikiKnowledgeCoverage(sourceCount: records.count, blockCount: count,
       unreadablePages: unreadable, complete: diagnostics.isEmpty,
       semanticComplete: false, diagnostics: diagnostics)

@@ -1,6 +1,6 @@
 # 한국어·영어 의미 검색과 관계 제안
 
-2026-11-08. 현재 구현·검증·제한·후속 계획의 정본이다. 이전 영어 전용 P4 문서를 대체한다. **일반 검색은 유지하고, 의미 검색은 사용자가 실행하는 실험 기능으로 제공한다.** 원문 writer·별도 승인·intent/receipt·초안 복구 경계는 유지했다. 자원 최적화와 지표 버전 변경은 [메모리 원인 분석·측정 기준](SEMANTIC_MEMORY_INVESTIGATION.md)을 따른다.
+2026-11-08. 현재 구현·검증·제한·후속 계획의 정본이다. 이전 영어 전용 P4 문서를 대체한다. **일반 검색은 유지하고, 의미 검색은 사용자가 실행하는 실험 기능으로 제공한다.** 원문 writer·별도 승인·intent/receipt·초안 복구 경계는 유지했다. 자원 최적화와 지표 버전 변경은 메모리 원인 분석·측정 기준(로컬 보관: `docs/History/ReleaseCleanup-20261128/SEMANTIC_MEMORY_INVESTIGATION.md`)을 따른다.
 
 ## 1. 계획과 실행 순서
 
@@ -15,9 +15,9 @@
 
 ## 2. 원인 분석과 반증
 
-기존 `NLEmbedding` 영어 일반 문장 모델은 코사인 0.25 이상을 후보로 반환했다. 관련 자료가 없어도 top-k에는 가장 가까운 문서가 있다. 이전 부정 질의 2개 중 1개에서 후보가 나왔다. 같은 질의의 3회 반복을 독립 표본 6개로 세지 않았다. [이전 원본](Verification/p4-20261108/semantic-evaluation.json).
+기존 `NLEmbedding` 영어 일반 문장 모델은 코사인 0.25 이상을 후보로 반환했다. 관련 자료가 없어도 top-k에는 가장 가까운 문서가 있다. 이전 부정 질의 2개 중 1개에서 후보가 나왔다. 같은 질의의 3회 반복을 독립 표본 6개로 세지 않았다. 이전 원본(로컬 보관: `docs/Verification/p4-20261108/semantic-evaluation.json`).
 
-첫 개선은 다국어 E5-small, 실제 원문 구간, 코사인 0.83와 최고점 차이 0.015였다. 46개 질의는 통과했지만, 새 36개 질의에서 **세면대 수리 → 커피**, **양자 오류 보정 → 작업 취소**가 나왔다. 이 실패를 보존했다. [단일 모델의 추가 audit](Verification/semantic-bilingual-20261108/single-stage-additional-audit.json).
+첫 개선은 다국어 E5-small, 실제 원문 구간, 코사인 0.83와 최고점 차이 0.015였다. 46개 질의는 통과했지만, 새 36개 질의에서 **세면대 수리 → 커피**, **양자 오류 보정 → 작업 취소**가 나왔다. 이 실패를 보존했다. 단일 모델의 추가 audit(로컬 보관: `docs/Verification/semantic-bilingual-20261108/single-stage-additional-audit.json`).
 
 확인한 원인을 분리했다.
 
@@ -60,7 +60,7 @@ flowchart LR
 
 [원 모델 계약](https://huggingface.co/intfloat/multilingual-e5-small/blob/614241f622f53c4eeff9890bdc4f31cfecc418b3/README.md), [E5 변환 출처](https://huggingface.co/tuanda2912/hark-multilingual-e5-small-coreml/blob/0a386d4aea14586b042c6e68a83acb6ff8d87970/README.md), [관련성 원 모델](https://huggingface.co/cross-encoder/mmarco-mMiniLMv2-L12-H384-v1), [관련성 변환](https://huggingface.co/isidorus-ai/mmarco-mMiniLMv2-L12-H384-v1)을 대조했다. 관련성 변환 문서는 출력을 `logits`라고 설명하지만 실제 고정 자산은 **`var_935`**다. 앱은 실제 출력 이름·shape·유효 수치를 검사한다. 배포자의 parity 주장을 자체 한국어 인증으로 사용하지 않았다. 원 fp32 모델과 모든 수치의 동등성은 이번 범위가 아니다.
 
-모델별 [E5 manifest](../Sources/FolioSemanticModels/Resources/MODEL_SOURCE.json), [관련성 manifest](../Sources/FolioSemanticModels/Resources/Relevance/MODEL_SOURCE.json), [tokenizer manifest](../Sources/FolioSemanticModels/Resources/TOKENIZER_SOURCE.json)에 revision·SHA-256·라이선스와 출처를 남겼다. 테스트가 모델 자산 12개·컴파일 표 2개를 실제 bytes로 검사한다. 두 weight와 공유 tokenizer 표는 [Git LFS](../.gitattributes)를 사용한다. 개발 빌드 전 `git lfs pull`이 필요하다. 원격 push·배포는 수행하지 않았다.
+모델별 [E5 manifest](../Sources/FolioSemanticModels/Resources/MODEL_SOURCE.json), [관련성 manifest](../Sources/FolioSemanticModels/Resources/Relevance/MODEL_SOURCE.json), [tokenizer manifest](../Sources/FolioSemanticModels/Resources/TOKENIZER_SOURCE.json)에 revision·SHA-256·라이선스와 출처를 남겼다. 앱 자산 테스트는 모델·라이선스·컴파일 tokenizer의 해시를 검사한다. 원본 tokenizer JSON과 설정 4개는 `Tools/SemanticAssets/ReferenceTokenizers`에서 재현에 사용하고 배포 번들에서 제외한다. `compile_tokenizer.py --check`는 원본 해시와 컴파일 산출물을 대조한다. 두 weight와 공유 tokenizer 표는 [Git LFS](../.gitattributes)를 사용한다. 개발 빌드 전 `git lfs pull`이 필요하다. 원격 push·배포는 수행하지 않았다.
 
 `FolioSemanticModels`는 선택형 제품이다. `FolioCore`·`FolioSDKUI`는 이 모델을 링크하지 않는다. SwiftPM resolver는 패키지에 선언한 의존성을 해석할 수 있다. 고급 호스트는 `WikiSearchService`에 `localSemanticEmbedding`과 `localSemanticRelevance`를 함께 주입한다. 기본 SDK 세션을 생성하는 것만으로 모델을 읽거나 추론하지 않는다.
 
@@ -94,9 +94,9 @@ flowchart LR
 
 producer는 `folio.semantic/<purpose>/<modelID digest>`다. model ID는 고정 weight·토큰 처리·CPU·원문 표현·역할과 retrieval의 공동 검사 버전을 포함한다. section ID·source revision·input hash·차원·수치를 검사한다. 같은 역할의 이전 cache와 옛 한 단계 producer만 정리한다. 손상 JSON 재계산·원문 변경/삭제·재시작·projection reset·다른 cache 보존을 검사했다.
 
-384차원 vector 원소의 상한 **1.5 MiB**는 SQLite JSON·모델·tokenizer·전체 앱 메모리 상한이 아니다. 이전 RSS 128 MiB FAIL과 footprint의 소규모 PASS·동시 실행 FAIL을 모두 보존한다. **128 MiB는 Apple 제한이 아니라 앞선 계획의 근거가 부족한 내부 목표**다. RSS에서 footprint로 측정 조건을 바꿔 같은 제한을 충족했다고 볼 수 없다. 이 숫자로 검색을 강제 차단하지 않으며, 모델 중복·임시 할당·반복 projection 재작성을 줄였다. [기준 재검토](SEMANTIC_MEMORY_INVESTIGATION.md), [현재 UI·검증](Verification/resource-reading-20261108/README.md).
+384차원 vector 원소의 상한 **1.5 MiB**는 SQLite JSON·모델·tokenizer·전체 앱 메모리 상한이 아니다. 이전 RSS 128 MiB FAIL과 footprint의 소규모 PASS·동시 실행 FAIL을 모두 보존한다. **128 MiB는 Apple 제한이 아니라 앞선 계획의 근거가 부족한 내부 목표**다. RSS에서 footprint로 측정 조건을 바꿔 같은 제한을 충족했다고 볼 수 없다. 이 숫자로 검색을 강제 차단하지 않으며, 모델 중복·임시 할당·반복 projection 재작성을 줄였다. 기준 재검토(로컬 보관: `docs/History/ReleaseCleanup-20261128/SEMANTIC_MEMORY_INVESTIGATION.md`), 현재 UI·검증(로컬 보관: `docs/Verification/resource-reading-20261108/README.md`).
 
-최적화 전 M2 Debug 82질의의 peak RSS **622.625 MiB** 기록을 보존한다. 현재 모델은 같은 weight·토큰·검색 점수를 유지하며 큰 JSON/trie 객체 구성을 제거했다. 앞선 단일 service 검증(이번 모델 공유·UI 변경 이전)의 Mac 전환 peak physical footprint는 **84.939 MiB**, iPhone 최종 3회는 **120.315–123.955 MiB**였다. 첫 실행을 포함한 CLI 지연·RSS·physical peak·해제 후 값은 [전체 측정](Verification/semantic-memory-20261108/measurement-summary.json)을 따른다. process-cold 실행이며 OS/Core ML compiler cache까지 cold로 만든 실험은 아니다. 배터리·열·모든 기기의 인증으로 확대하지 않는다.
+최적화 전 M2 Debug 82질의의 peak RSS **622.625 MiB** 기록을 보존한다. 현재 모델은 같은 weight·토큰·검색 점수를 유지하며 큰 JSON/trie 객체 구성을 제거했다. 앞선 단일 service 검증(이번 모델 공유·UI 변경 이전)의 Mac 전환 peak physical footprint는 **84.939 MiB**, iPhone 최종 3회는 **120.315–123.955 MiB**였다. 첫 실행을 포함한 CLI 지연·RSS·physical peak·해제 후 값은 전체 측정(로컬 보관: `docs/Verification/semantic-memory-20261108/measurement-summary.json`)을 따른다. process-cold 실행이며 OS/Core ML compiler cache까지 cold로 만든 실험은 아니다. 배터리·열·모든 기기의 인증으로 확대하지 않는다.
 
 ## 7. 관계·승인·복구 계약
 
@@ -122,7 +122,7 @@ SEMI capability ID/schema는 유지했다. `wiki.semantic_search`, `wiki.suggest
 
 [공유 corpus](../Tests/FolioKnowledgeTests/Fixtures/SemanticCorpus.json)는 6개 주제 한·영 문서 12개, 질의 82개다. 관련 gold는 같은 주제 한·영 문서 2개로 유지했다. 개인 자료와 질의별 예외 코드는 사용하지 않았다.
 
-**첫 holdout과 추가 audit의 실패를 보고 모델·정책을 개선했다. 이 집합은 최종 blind test가 아니다.** 실패는 [보정 전 holdout](Verification/semantic-bilingual-20261108/holdout-before-calibration.json)과 추가 audit 원본으로 보존한다. 이후 정책을 고정해 새 16개 합성 질의를 검사했다. 이 또한 실제 사용자 traffic을 대표하는 통계적 인증은 아니다.
+**첫 holdout과 추가 audit의 실패를 보고 모델·정책을 개선했다. 이 집합은 최종 blind test가 아니다.** 실패는 보정 전 holdout(로컬 보관: `docs/Verification/semantic-bilingual-20261108/holdout-before-calibration.json`)과 추가 audit 원본으로 보존한다. 이후 정책을 고정해 새 16개 합성 질의를 검사했다. 이 또한 실제 사용자 traffic을 대표하는 통계적 인증은 아니다.
 
 | 집합 | 양성/부정 | Hit@3 | 후보 precision | 부정 후보 반환률 | Recall@3 |
 | --- | --- | --- | --- | --- | --- |
@@ -132,7 +132,7 @@ SEMI capability ID/schema는 유지했다. `wiki.semantic_search`, `wiki.suggest
 | 추가 audit | 12 / 24 | 0.9167 | 1.0000 | 0 | 0.7083 |
 | 정책 고정 후 추가 16질의 | 8 / 8 | 1.0000 | 1.0000 | 0 | 0.6875 |
 
-Hit@3는 관련 문서가 하나라도 나온 비율, Recall@3는 gold 전체의 회수 비율이다. 추가 audit의 하천 질의 하나는 관련 문서가 있어도 기각했다. 이를 gold에서 빼지 않았다. [현재 평가](Verification/semantic-bilingual-20261108/evaluation.json), [고정 후 추가 검사](Verification/semantic-bilingual-20261108/qualification.json)에 질의별 결과·원점수·완전성·지연·RSS를 남긴다. 52개 부정 질의에서 후보가 없었다는 관찰을 모든 질의의 오탐 0으로 일반화하지 않는다.
+Hit@3는 관련 문서가 하나라도 나온 비율, Recall@3는 gold 전체의 회수 비율이다. 추가 audit의 하천 질의 하나는 관련 문서가 있어도 기각했다. 이를 gold에서 빼지 않았다. 현재 평가(로컬 보관: `docs/Verification/semantic-bilingual-20261108/evaluation.json`), 고정 후 추가 검사(로컬 보관: `docs/Verification/semantic-bilingual-20261108/qualification.json`)에 질의별 결과·원점수·완전성·지연·RSS를 남긴다. 52개 부정 질의에서 후보가 없었다는 관찰을 모든 질의의 오탐 0으로 일반화하지 않는다.
 
 같은 82질의·같은 gold에서 lexical Recall@3는 **0.4605**, 현재 의미 검색은 **0.6579**, 차이는 **+0.1974**였다. 이전 영어 모델 평가와는 corpus가 다르므로 그 수치와 직접 성능 증감을 비교하지 않는다.
 
@@ -140,9 +140,9 @@ Hit@3는 관련 문서가 하나라도 나온 비율, Recall@3는 gold 전체의
 
 ## 9. 실제 검증·정리·재현
 
-이전 두 단계 도입 검증은 [이전 manifest](Verification/semantic-bilingual-20261108/results.json), 현재 자원 최적화·회귀·실기기 실행·binary/source 해시·실패와 재실행은 [현재 manifest](Verification/semantic-memory-20261108/results.json)를 따른다. **Mac은 실제 네이티브 앱과 로컬 QA 원문**, **iPhone은 연결된 iPhone 15와 정확한 iCloud container/workspace admission**으로 검사했다. simulator 결과로 대체하지 않았다. Mac cloud admission 오류의 보호 조건을 해제하지 않고 로컬 폴더를 사용했다.
+이전 두 단계 도입 검증은 이전 manifest(로컬 보관: `docs/Verification/semantic-bilingual-20261108/results.json`), 현재 자원 최적화·회귀·실기기 실행·binary/source 해시·실패와 재실행은 현재 manifest(로컬 보관: `docs/Verification/semantic-memory-20261108/results.json`)를 따른다. **Mac은 실제 네이티브 앱과 로컬 QA 원문**, **iPhone은 연결된 iPhone 15와 정확한 iCloud container/workspace admission**으로 검사했다. simulator 결과로 대체하지 않았다. Mac cloud admission 오류의 보호 조건을 해제하지 않고 로컬 폴더를 사용했다.
 
-현재 Mac 검색 후 기존 Markdown 15개 해시가 같았다. QA 대조 문서 1개 추가 후 취소 시 16개 해시가 같았고, 승인 뒤에는 표시한 `sleep-ko`의 related 한 개만 바뀌었다. 재실행 후 같은 operation ID와 accepted 상태를 조회했다. iPhone에서는 새 coffee 관계를 별도로 승인하고 같은 receipt를 재조회했다. [현재 화면·해시 기록](Verification/semantic-memory-20261108/results.json)을 따른다. 이전 단계 통과를 최종 코드 검증으로 대신하지 않는다.
+현재 Mac 검색 후 기존 Markdown 15개 해시가 같았다. QA 대조 문서 1개 추가 후 취소 시 16개 해시가 같았고, 승인 뒤에는 표시한 `sleep-ko`의 related 한 개만 바뀌었다. 재실행 후 같은 operation ID와 accepted 상태를 조회했다. iPhone에서는 새 coffee 관계를 별도로 승인하고 같은 receipt를 재조회했다. 현재 화면·해시 기록(로컬 보관: `docs/Verification/semantic-memory-20261108/results.json`)을 따른다. 이전 단계 통과를 최종 코드 검증으로 대신하지 않는다.
 
 | 최종 검사 | 결과 |
 | --- | --- |

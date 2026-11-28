@@ -52,7 +52,8 @@ public struct DevelopmentPlan: Sendable {
     case .ios:
       actions = [.command(Self.command(request, "/usr/bin/xcodebuild", Self.buildArguments(scheme: "FolioIOS",
         destination: "generic/platform=iOS Simulator", output: paths.ios.path) +
-        ["CODE_SIGNING_ALLOWED=NO", "FOLIO_IOS_INFO_PLIST=Apps/IOSLocalInfo.plist", "build"])),
+        ["CODE_SIGNING_ALLOWED=YES", "CODE_SIGN_IDENTITY=-", "DEVELOPMENT_TEAM=",
+         "FOLIO_IOS_INFO_PLIST=Apps/IOSLocalInfo.plist", "build"])),
         .report("Local iOS development app: \(paths.iosApp.path)")]
     case .cloud(let mode):
       let mac = mode == .mac

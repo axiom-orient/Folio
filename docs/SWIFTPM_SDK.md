@@ -52,9 +52,86 @@ SDK는 기존 Folio 앱의 Application Support·UserDefaults·Keychain을 탐색
 
 `search(query)`는 처음 50개 결과를 반환하는 편의 API입니다. 전체 결과는 `searchPage(query, continuation:)`의 `nextContinuation`이 없어질 때까지 이어서 조회합니다. 각 페이지는 전체 개수, 검색 범위의 완전성, 진단을 반환합니다. continuation은 세션·검색어·원문 버전·정렬에 묶이며 원문이 바뀌면 재검색을 요구합니다. SDK UI는 더 보기와 불완전 검색 안내를 표시합니다.
 
-`prepareKnowledgeIndex()`와 `knowledgeAnswer(_:documentID:)`는 Markdown과 문서에 연결된 텍스트 PDF를 전체 블록 색인에서 검색합니다. `documentID`를 주면 해당 문서와 연결된 PDF만 조회하며 존재하지 않는 범위를 전체 자료함으로 확대하지 않습니다. SDK 세션의 이 경로는 모델이나 네트워크를 활성화하지 않습니다. 기존 Folio 앱의 선택형 뜻 검색은 별도 `WikiSearchService` 모델 주입을 사용합니다.
+`prepareKnowledgeIndex()`와 `knowledgeAnswer(_:documentID:)`는 Markdown과 문서에 연결된 PDF를 블록 색인에서 검색합니다. 기기 내 Apple Vision으로 스캔 페이지와 본문이 있는 페이지의 이미지 영역을 읽습니다. `documentID`를 지정하면 해당 문서와 연결된 PDF로 범위를 제한합니다. 기본 검색은 네트워크 없이 동작합니다. Folio 앱의 선택형 뜻 검색은 별도 `WikiSearchService` 모델 주입을 사용합니다.
 
-반환되는 `WikiKnowledgeAnswer.evidence`는 생성형 답변이 아닌 현재 원문 인용입니다. `coverage`의 추출 누락·검색 범위를 함께 표시해야 합니다. `readKnowledgeEvidence(_:)`와 `previewKnowledgePDF(_:)`는 원문 권한과 revision을 다시 검사합니다. PDF 미리보기는 검증된 Data snapshot과 페이지·영역 좌표이며 원본 URL 쓰기 권한을 제공하지 않습니다. 원문 폴더 변경·계정 접근 상실·세션 닫힘 뒤 기존 인용으로 새 원문 읽기를 수행할 수 없습니다. 여러 자료의 검사는 전역 원자적 snapshot이 아닙니다.
+`WikiKnowledgeAnswer.evidence`는 원문 기반의 검색 결과입니다. `pdfRegion?.kind == .ocrUnreviewed`인 항목에는 스캔 인식 표시를 붙이고 `coverage`의 추출 누락·검색 범위를 함께 표시합니다. `readKnowledgeEvidence(_:)`와 `previewKnowledgePDF(_:)`는 원문 권한과 revision을 다시 검사합니다. PDF 미리보기는 검증된 Data snapshot과 페이지·영역 좌표를 제공합니다. 원문 폴더 변경·계정 접근 상실·세션 닫힘 뒤 기존 인용으로 새 원문 읽기를 수행할 수 없습니다. 여러 자료는 순서대로 검사합니다. [PDF 추출과 원문 확인](PDF_EVIDENCE.md)
+
+### 원문에 연결된 개념 · 2026-11-28
+
+`knowledgeAnswer(_:documentID:conceptID:)`는 선택 자료를 추출 전에 확정하고 선택 밖의 정상 캐시·벡터를 보존합니다. 현재 전체 inventory의 scan/hash 재확인은 유지하므로 선택 밖의 파일 I/O 전체를 생략한다는 뜻은 아닙니다. 빈 범위와 없는 문서를 전체 검색으로 확대하지 않습니다.
+
+채택한 Concept의 한·영 이름·별칭은 모델 없는 검색에도 사용합니다. 일반 문서 aliases는 기존 문서 이름의 의미를 유지합니다. optional `answer.concepts`는 가능한 의미·선택·확장 완료 여부를 반환합니다. 동명 개념이 있으면 그중 선택한 ID를 같은 질문의 `conceptID`로 전달합니다. 이미 ID를 아는 경우 `readKnowledgeConcept(id:)`가 개념과 현재 검증한 원문 근거를 직접 반환하므로 재검색이 필요 없습니다.
+
+```swift
+import Foundation
+import FolioKnowledge
+import FolioKnowledgeApple
+
+let found = try await session.knowledgeAnswer("thermal conductivity")
+if let evidence = found.evidence.first {
+  let concept = WikiKnowledgeConcept(id: UUID().uuidString.lowercased(), domain: "재료",
+    labels: [WikiConceptLabel(language: "ko", preferred: "열전도율", aliases: ["thermal conductivity"])],
+    mentions: [WikiKnowledgeConceptMention(evidence: evidence)])
+  let operation = UUID()
+  let plan = try await session.prepareKnowledgeConcept(concept, operationID: operation)
+  // 호스트가 정확한 내용의 저장 의도를 확인한 뒤 같은 plan을 실행합니다.
+  let receipt = try await session.executeKnowledgeConcept(plan)
+  let current = try await session.readKnowledgeConcept(id: concept.id)
+}
+```
+
+기존 개념에 별칭·근거를 추가할 때는 그 record의 `relativePath`와 `revision`을 prepare의 `relativePath`·`expectedRevision`으로 넘깁니다. ID·다른 Mention·unknown JSON을 보존하는 CAS 갱신이며 이름만으로 자동 병합하지 않습니다. draft와 accepted를 구별하고 원문 근거 없는 draft는 검색 확장에 사용하지 않습니다.
+
+저장 결과가 불확실하면 같은 `operationID`의 `knowledgeConceptOperationStatus`를 관측합니다. `operation`은 기존 writer의 역사적 결과, `sourceObserved`는 요청한 파일 바이트의 현재 관측, `currentness`는 인용한 원문 근거의 상태입니다. 세 값을 합쳐 사실성 배지로 사용하지 않습니다. 미확정 상태에서 새 작업을 자동 생성하거나 execute를 재실행하지 않습니다. 원문이 바뀌어도 과거 commit의 관측은 유지합니다. [구현 범위와 보존 계약](ONTOLOGY_IMPLEMENTATION_PLAN.md)
+
+### 주장·조건·값·단위·판본 · O3
+
+`WikiKnowledgeAssertion`은 한 주장과 `conceptIDs`, 조건, 선택적인 값·단위·판본, 원문 근거를 묶습니다. 각 항목의 `WikiKnowledgeAssertionText`에는 표현, `quoted` 또는 `interpretation` 구분, 실제 근거 ID와 원문 문구가 들어갑니다. 근거 역할은 `support`, `context`, `refute`입니다. 문맥이나 반박만으로 주장을 지지한 것으로 처리하지 않습니다. `polarity`의 기본값은 `unspecified`이며, 다른 값도 호출자의 분류입니다.
+
+직접 인용은 원문의 연속된 UTF-8 표현을 유지합니다. 숫자의 부호·소수점·지수를 잘라 다른 값으로 만들거나 단어의 일부를 단위로 사용하는 입력은 거부합니다. 값·단위·판본은 직접 인용만 허용합니다. 직접 인용한 값은 주장 표현 자체에도 있어야 합니다. 이 항목들과 직접 인용한 조건은 주장의 지지 근거와 같은 실제 원본의 자료함 범위·경로·해시에 연결돼야 합니다. 표의 값, 헤더의 단위, 표지의 판본은 같은 PDF 안의 서로 다른 근거로 지정할 수 있습니다. 이 검사는 추적 가능성과 표현의 보존을 확인하며, 표의 의미·문장의 논리적 함의·객관적 참임을 인증하지 않습니다. 해석은 명시적으로 구분해 표시해야 합니다.
+
+ID를 알면 `readKnowledgeAssertion(id:)`로 바로 읽습니다. 목록은 `knowledgeAssertions(conceptID:documentID:unit:edition:query:limit:)`로 조회하며 검색 모델이 필요 없습니다. 단위는 대소문자를 보존해 일치시키고, 판본과 `query`는 Unicode 정규화 후 대소문자를 구분하지 않습니다. `query`는 주장·조건·값·단위·판본의 부분 문자열 검색입니다. `documentID`를 지정하면 전체 근거 묶음이 그 문서에 속한 주장만 반환합니다. 채택된 주장만 목록에 포함되며, 원문이나 연결 개념이 바뀐 레코드는 진단과 함께 제외됩니다. `complete`와 `diagnostics`도 확인합니다.
+
+```swift
+let saved = try await session.knowledgeAssertions(unit: "W/(m K)", limit: 20)
+if let record = saved.records.first, let field = record.assertion.unit {
+  // 첫 번째 근거 전체가 아니라 이 단위를 실제로 포함한 근거를 선택합니다.
+  if let original = try record.assertion.sourceEvidence(for: field).first {
+    let text = try await session.readKnowledgeEvidence(original)
+    if original.source.kind == .pdf {
+      let preview = try await session.previewKnowledgePDF(original)
+      // 호스트 viewer에 검증된 preview의 Data·페이지·영역을 전달합니다.
+    }
+  }
+}
+```
+
+주장 저장도 `prepareKnowledgeAssertion(_:relativePath:expectedRevision:operationID:)` 후 승인된 같은 계획을 `executeKnowledgeAssertion(_:)`으로 실행합니다. 기존 레코드 수정에는 반환된 경로와 revision을 전달합니다. 공통 Concept/Assertion writer가 원문과 연결 개념의 현재 revision, 계획의 경로·내용을 다시 확인합니다. 저장 결과가 불확실하면 같은 작업의 `knowledgeAssertionOperationStatus(operationID:)`만 조회합니다. 그 결과의 `operation`, `sourceObserved`, `currentness`는 앞의 개념 저장과 같은 서로 다른 의미를 유지합니다. 원문 책·논문은 수정하지 않으며, 저장한 주장을 독립적인 1차 출처로 다시 색인하지 않습니다.
+
+연결 개념의 경로·revision은 writer 소유 `conceptBindings`에 기록합니다. prepare·execute·직접 조회에서 현재 채택된 개념과 원문 근거를 다시 확인합니다. 개념이 바뀌면 기존 주장을 자동으로 새 의미에 연결하지 않습니다. 검토한 호출자가 기존 주장 경로·revision을 사용해 명시적으로 CAS 갱신하면 현재 개념에 다시 연결할 수 있습니다. 주장 노트의 생성된 Markdown 구간도 typed 메타데이터와 일치해야 합니다. 일반 원문 편집으로 둘이 달라진 파일은 보존하지만 typed 읽기·저장은 거부하므로 내용을 검토해 복구해야 합니다. 새 assertion 경로를 추가하면서 기존 `ConceptOperations` v1의 작업 필드·근거 digest는 유지합니다.
+
+필요한 문맥은 `knowledgeEvidenceContext(_:limit:)`로 더 읽습니다. 기본 8개, 최대 16개이며 Markdown은 해당 구획과 이웃 구획, PDF는 선택한 페이지를 대상으로 합니다. OCR 이미지가 지정된 근거는 그 이미지의 인식 범위를 유지합니다. 반환된 `complete`는 이 제한된 주변 범위의 누락 여부이며, 책 전체나 표의 의미 구조를 완전히 읽었다는 뜻이 아닙니다. [PDF 위치와 해석 범위](PDF_EVIDENCE.md)
+
+개념만 바뀐 주장은 `reviewKnowledgeAssertion(id:)`로 별도 검토합니다. 유효한 원문과 기존 주장, 변경된 개념의 현재 내용, `currentConceptRevisions`를 반환하며 현재 지식 조회와 구별합니다. 원문까지 바뀌면 검토 조회도 거부하며 인용을 자동 갱신하지 않습니다. 화면에서 확인한 개념 버전을 아래처럼 저장 준비에 전달하면, 검토 뒤 개념이 다시 바뀐 경우 거부합니다. 사용할 수 없는 개념은 명시적으로 연결을 해제한 뒤 저장합니다.
+
+```swift
+let review = try await session.reviewKnowledgeAssertion(id: assertionID)
+// 호스트가 주장과 현재 개념 내용을 표시하고 사용자의 저장 의도를 받은 뒤:
+let plan = try await session.prepareKnowledgeAssertion(review.record.assertion,
+  relativePath: review.record.relativePath, expectedRevision: review.record.revision,
+  expectedConceptRevisions: review.currentConceptRevisions, operationID: UUID())
+// 승인된 plan만 executeKnowledgeAssertion에 전달합니다.
+```
+
+앱의 반복 저장 검사는 `matchingKnowledgeAssertion(_:)`로 정확한 typed 내용을 원문 레코드 전체에서 대조합니다. 목록의 첫 100개를 읽고 나머지가 없다고 추정하지 않습니다. `contentDigest()`는 배정된 `recordID`만 제외하며 근거 버전·역할·해석 구분·조건은 유지합니다. 같은 내용은 현재 원문과 개념을 다시 검증해 재사용합니다. 읽지 못한 기록이 있어 부재를 확인할 수 없으면 새 파일을 만들지 않습니다.
+
+### 선택형 주장 후보 추출
+
+기본 추출 backend는 없습니다. 호스트가 `WikiKnowledgeAssertionExtractionProvider`를 구현해 `proposeKnowledgeAssertions(_:evidence:conceptIDs:provider:)`에 명시 전달할 때만 후보를 만듭니다. provider가 없으면 설정되지 않았다는 오류를 반환하며 직접 저장 경로는 유지됩니다. 호스트는 선택한 모델과 외부 전송 여부·이용 조건을 결정합니다.
+
+provider에는 현재 읽은 원문 텍스트·근거 ID·표시 위치와 허용한 개념 목록, 응답 schema만 전달합니다. 자료함 URL·파일 도구·writer·승인 도구는 전달하지 않습니다. 입력은 schema를 포함해 64 KiB, 근거는 최대 64개, 출력은 64 KiB 안의 최대 8개 후보로 제한합니다. 출력은 `WikiKnowledgeAssertionProposer.responseSchemaJSON()`을 따르며 허용한 근거·개념 ID만 참조할 수 있습니다. 알 수 없는 필드, 임의 레코드 ID나 채택 상태, 원문과 다른 직접 인용은 거부합니다. 대기 전후에 원문과 개념 revision을 검사하고, 취소된 provider가 실제로 끝나기 전에는 같은 proposer의 실행 자리를 비우지 않습니다.
+
+반환하는 `WikiKnowledgeAssertionProposal`은 host가 만든 읽기 전용 후보이며 상태는 `draft`입니다. 제안 자체는 파일을 쓰지 않습니다. 사용자가 후보를 검토해 저장할 때 proposal을 받는 `prepareKnowledgeAssertion` overload를 호출하고 같은 계획을 실행합니다. 이 경로는 원문·개념을 다시 검사하고 명시 저장으로 채택하며 provider ID, schema·policy 버전, 입력 digest와 proposal ID를 writer 소유 메타데이터에 보존합니다. 새 수동 입력의 `WikiKnowledgeAssertion.decodeInput(_:)`은 이 메타데이터를 위조할 수 없습니다. 이후 명시 수정도 최초 추출 출처를 보존합니다. 후보가 schema 검사를 통과한 것을 생성 모델의 정확도나 사실성 검증 통과로 표시하지 않습니다.
 
 ## 편집·저장·복구
 

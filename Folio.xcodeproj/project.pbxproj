@@ -104,7 +104,6 @@
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
 		E2BC834730A0A86E00CE7350 /* FolioRuntimeChecks */ = {isa = PBXFileSystemSynchronizedRootGroup; explicitFileTypes = {}; explicitFolders = (); path = FolioRuntimeChecks; sourceTree = "<group>"; };
-		E2BC835730A0B0F100CE7350 /* FolioMacRuntimeChecks */ = {isa = PBXFileSystemSynchronizedRootGroup; explicitFileTypes = {}; explicitFolders = (); path = FolioMacRuntimeChecks; sourceTree = "<group>"; };
 		E2F5BB95307E4E0200AB4E24 /* FolioDeviceUITests */ = {isa = PBXFileSystemSynchronizedRootGroup; explicitFileTypes = {}; explicitFolders = (); path = FolioDeviceUITests; sourceTree = "<group>"; };
 /* End PBXFileSystemSynchronizedRootGroup section */
 
@@ -192,7 +191,6 @@
 				D4C242D5A57B70AE6D2F858A /* Apps/Assets.xcassets */,
 				E2F5BB95307E4E0200AB4E24 /* FolioDeviceUITests */,
 				E2BC834730A0A86E00CE7350 /* FolioRuntimeChecks */,
-				E2BC835730A0B0F100CE7350 /* FolioMacRuntimeChecks */,
 				B9E7F2871A3402983868AFC8 /* Products */,
 			);
 			sourceTree = "<group>";
@@ -300,7 +298,7 @@
 				E2A8E58D30A0B1D900751C2D /* PBXTargetDependency */,
 			);
 			fileSystemSynchronizedGroups = (
-				E2BC835730A0B0F100CE7350 /* FolioMacRuntimeChecks */,
+				E2BC834730A0A86E00CE7350 /* FolioRuntimeChecks */,
 			);
 			name = FolioMacRuntimeChecks;
 			packageProductDependencies = (
@@ -537,6 +535,7 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_ENTITLEMENTS = Apps/Mac.entitlements;
 				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 2;
 				DEVELOPMENT_TEAM = 7WR76382QB;
 				ENABLE_APP_SANDBOX = YES;
 				ENABLE_INCOMING_NETWORK_CONNECTIONS = YES;
@@ -556,6 +555,7 @@
 					"@executable_path/../Frameworks",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 27.0;
+				MARKETING_VERSION = 0.2.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.axient.Folio;
 				PRODUCT_MODULE_NAME = FolioMac;
 				PRODUCT_NAME = FolioMac;
@@ -573,6 +573,7 @@
 				APPLICATION_EXTENSION_API_ONLY = YES;
 				CODE_SIGN_ENTITLEMENTS = Extensions/Spotlight.entitlements;
 				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 2;
 				DEVELOPMENT_TEAM = 7WR76382QB;
 				GENERATE_INFOPLIST_FILE = NO;
 				INFOPLIST_FILE = Extensions/Info.plist;
@@ -581,6 +582,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
+				MARKETING_VERSION = 0.2.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.axient.Folio.Spotlight;
 				PRODUCT_MODULE_NAME = SpotlightIOS;
 				PRODUCT_NAME = SpotlightIOS;
@@ -608,6 +610,7 @@
 				APPLICATION_EXTENSION_API_ONLY = YES;
 				CODE_SIGN_ENTITLEMENTS = Extensions/SpotlightMac.entitlements;
 				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 2;
 				DEVELOPMENT_TEAM = 7WR76382QB;
 				ENABLE_APP_SANDBOX = YES;
 				GENERATE_INFOPLIST_FILE = NO;
@@ -617,6 +620,7 @@
 					"@executable_path/../Frameworks",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 27.0;
+				MARKETING_VERSION = 0.2.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.axient.Folio.Spotlight;
 				PRODUCT_MODULE_NAME = SpotlightMac;
 				PRODUCT_NAME = SpotlightMac;
@@ -635,6 +639,7 @@
 				APPLICATION_EXTENSION_API_ONLY = YES;
 				CODE_SIGN_ENTITLEMENTS = Extensions/SpotlightMac.entitlements;
 				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 2;
 				DEVELOPMENT_TEAM = 7WR76382QB;
 				ENABLE_APP_SANDBOX = YES;
 				GENERATE_INFOPLIST_FILE = NO;
@@ -644,6 +649,7 @@
 					"@executable_path/../Frameworks",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 27.0;
+				MARKETING_VERSION = 0.2.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.axient.Folio.Spotlight;
 				PRODUCT_MODULE_NAME = SpotlightMac;
 				PRODUCT_NAME = SpotlightMac;
@@ -669,6 +675,7 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_ENTITLEMENTS = Apps/Folio.entitlements;
 				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 2;
 				DEVELOPMENT_TEAM = 7WR76382QB;
 				FOLIO_IOS_INFO_PLIST = Apps/IOSInfo.plist;
 				GENERATE_INFOPLIST_FILE = NO;
@@ -678,6 +685,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
+				MARKETING_VERSION = 0.2.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.axient.Folio;
 				PRODUCT_MODULE_NAME = FolioIOS;
 				PRODUCT_NAME = FolioIOS;
@@ -697,6 +705,7 @@
 				APPLICATION_EXTENSION_API_ONLY = YES;
 				CODE_SIGN_ENTITLEMENTS = Extensions/Spotlight.entitlements;
 				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 2;
 				DEVELOPMENT_TEAM = 7WR76382QB;
 				GENERATE_INFOPLIST_FILE = NO;
 				INFOPLIST_FILE = Extensions/Info.plist;
@@ -705,6 +714,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
+				MARKETING_VERSION = 0.2.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.axient.Folio.Spotlight;
 				PRODUCT_MODULE_NAME = SpotlightIOS;
 				PRODUCT_NAME = SpotlightIOS;
@@ -725,6 +735,7 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_ENTITLEMENTS = Apps/Folio.entitlements;
 				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 2;
 				DEVELOPMENT_TEAM = 7WR76382QB;
 				FOLIO_IOS_INFO_PLIST = Apps/IOSInfo.plist;
 				GENERATE_INFOPLIST_FILE = NO;
@@ -734,6 +745,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
+				MARKETING_VERSION = 0.2.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.axient.Folio;
 				PRODUCT_MODULE_NAME = FolioIOS;
 				PRODUCT_NAME = FolioIOS;
@@ -1207,6 +1219,7 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_ENTITLEMENTS = Apps/Mac.entitlements;
 				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 2;
 				DEVELOPMENT_TEAM = 7WR76382QB;
 				ENABLE_APP_SANDBOX = YES;
 				ENABLE_INCOMING_NETWORK_CONNECTIONS = YES;
@@ -1226,6 +1239,7 @@
 					"@executable_path/../Frameworks",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 27.0;
+				MARKETING_VERSION = 0.2.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.axient.Folio;
 				PRODUCT_MODULE_NAME = FolioMac;
 				PRODUCT_NAME = FolioMac;

@@ -43,7 +43,7 @@ public struct WikiPDFPage: Codable, Hashable, Sendable {
   public enum Extraction: String, Codable, Hashable, Sendable {
     /// PDFKit's original text layer, not a claim that the PDF contains true facts.
     case textLayer
-    /// Reserved for a future OCR producer; this extractor never emits it.
+    /// Machine-read text from a rendered page. Compare it with the original image.
     case ocrUnreviewed
     /// No usable text layer. This includes scanned images and empty pages.
     case unreadable
@@ -63,6 +63,18 @@ public struct WikiPDFPage: Codable, Hashable, Sendable {
   }
 }
 
+struct WikiPDFKnowledgePage {
+  struct Region {
+    let page: WikiPDFPage
+    let identity: WikiPDFEvidenceRegion
+  }
+  let native: WikiPDFPage
+  let regions: [Region]
+  let includesNative: Bool
+  var recognitionFailed = false
+  var imageScanIncomplete = false
+}
+
 /// Extracts only admitted bytes. It owns no file URL, workspace, writer or
 /// network capability, and no PDFKit object escapes this synchronous operation.
 public enum WikiPDFExtractor {
@@ -80,6 +92,85 @@ public enum WikiPDFExtractor {
   /// The index consumes one page at a time, without retaining all line regions.
   static func forEachPage(_ bytes: Data, pageIndices: Set<Int>? = nil,
     _ consume: (WikiPDFPage) throws -> Void) throws {
+    try visitPages(bytes, pageIndices: pageIndices) { _, native in try consume(native) }
+  }
+
+  /// A nil enhancement set enables OCR and layout for every selected page.
+  /// Legacy citations request only the original PDFKit representation.
+  static func forEachKnowledgePage(_ bytes: Data, pageIndices: Set<Int>? = nil,
+    enhancedPages: Set<Int>? = nil, mixedImageIndices: [Int: Set<Int>]? = nil,
+    _ consume: (WikiPDFKnowledgePage) throws -> Void) throws {
+    try visitPages(bytes, pageIndices: pageIndices) { page, native in
+      guard let page, enhancedPages?.contains(native.pageIndex) ?? true else {
+        try consume(.init(native: native, regions: [], includesNative: true))
+        return
+      }
+      let canGroup = page.rotation.isMultiple(of: 360)
+      if native.extraction == .textLayer {
+        let positions = try positionedText(on: page, native: native)
+        let groups = canGroup ? try WikiPDFLayout.groups(positions.runs) : []
+        let hasAllText = groups.isEmpty ? false : positions.runs.map(\.text).joined().filter { !$0.isWhitespace }.utf8
+          .elementsEqual(native.text.filter { !$0.isWhitespace }.utf8)
+        var result = WikiPDFKnowledgePage(native: native,
+          regions: makeRegions(groups, native: native, kind: .layout), includesNative: !hasAllText)
+        if mixedImageIndices == nil || mixedImageIndices?[native.pageIndex]?.isEmpty == false {
+          let images = try recognizeImages(on: page, native: native, existing: positions.runs + positions.tokens,
+            selected: mixedImageIndices?[native.pageIndex], canGroup: canGroup)
+          result = .init(native: native, regions: result.regions + images.regions,
+            includesNative: !hasAllText, recognitionFailed: images.failed, imageScanIncomplete: images.incomplete)
+        }
+        try consume(result)
+      } else {
+        let observations: [WikiPDFTextRegion]
+        do { observations = try WikiPDFOCR.recognize(page) }
+        catch is CancellationError { throw CancellationError() }
+        catch {
+          try Task.checkCancellation()
+          try consume(.init(native: native, regions: [], includesNative: false, recognitionFailed: true))
+          return
+        }
+        let regions = try recognizedRegions(observations, native: native, canGroup: canGroup, imageIndex: nil)
+        try consume(.init(native: native, regions: regions, includesNative: false))
+      }
+    }
+  }
+
+  private static func recognizeImages(on page: PDFPage, native: WikiPDFPage, existing: [WikiPDFTextRegion],
+    selected: Set<Int>?, canGroup: Bool) throws -> (regions: [WikiPDFKnowledgePage.Region], failed: Bool, incomplete: Bool) {
+    let scan = try WikiPDFImageRegions.regions(in: page)
+    var result: [WikiPDFKnowledgePage.Region] = []
+    var failed = false
+    for (index, rectangle) in scan.regions.enumerated() where selected?.contains(index) ?? true {
+      try Task.checkCancellation()
+      do {
+        result += try autoreleasepool {
+          let observations = try WikiPDFOCR.recognize(page, in: rectangle, excluding: existing)
+          return try recognizedRegions(observations, native: native, canGroup: canGroup, imageIndex: index)
+        }
+      } catch is CancellationError { throw CancellationError() }
+      catch { failed = true }
+    }
+    return (result, failed, scan.incomplete)
+  }
+
+  private static func recognizedRegions(_ observations: [WikiPDFTextRegion], native: WikiPDFPage,
+    canGroup: Bool, imageIndex: Int?) throws -> [WikiPDFKnowledgePage.Region] {
+    let groups = canGroup ? try WikiPDFLayout.groups(observations) : []
+    return makeRegions(groups.isEmpty ? observations.map { [$0] } : groups,
+      native: native, kind: .ocrUnreviewed, imageIndex: imageIndex)
+  }
+
+  private static func makeRegions(_ groups: [[WikiPDFTextRegion]], native: WikiPDFPage,
+    kind: WikiPDFEvidenceRegion.Kind, imageIndex: Int? = nil) -> [WikiPDFKnowledgePage.Region] {
+    groups.enumerated().map { index, group in
+      WikiPDFKnowledgePage.Region(page: regionPage(group, basedOn: native,
+        extraction: kind == .layout ? .textLayer : .ocrUnreviewed),
+        identity: .init(kind: kind, groupIndex: index, imageIndex: imageIndex))
+    }
+  }
+
+  private static func visitPages(_ bytes: Data, pageIndices: Set<Int>?,
+    _ consume: (PDFPage?, WikiPDFPage) throws -> Void) throws {
     try Task.checkCancellation()
     guard !bytes.isEmpty, bytes.count <= 50 * 1024 * 1024 else {
       throw WikiError.invalidSource("PDF 원본은 비어 있지 않은 50 MiB 이하 파일이어야 합니다.")
@@ -98,13 +189,13 @@ public enum WikiPDFExtractor {
     }
     func consumePage(at index: Int) throws {
       try Task.checkCancellation()
-      let value = try autoreleasepool {
+      try autoreleasepool {
         guard let page = document.page(at: index) else {
-          return WikiPDFPage(pageIndex: index, label: String(index + 1), text: "", regions: [], extraction: .unreadable)
+          try consume(nil, WikiPDFPage(pageIndex: index, label: String(index + 1), text: "", regions: [], extraction: .unreadable))
+          return
         }
-        return try extractPage(page, index: index)
+        try consume(page, extractPage(page, index: index))
       }
-      try consume(value)
     }
     if let pageIndices {
       for index in pageIndices.sorted() { try consumePage(at: index) }
@@ -112,6 +203,65 @@ public enum WikiPDFExtractor {
       for index in 0..<document.pageCount { try consumePage(at: index) }
     }
     try Task.checkCancellation()
+  }
+
+  private static func regionPage(_ regions: [WikiPDFTextRegion], basedOn native: WikiPDFPage,
+    extraction: WikiPDFPage.Extraction) -> WikiPDFPage {
+    var text = ""
+    let positioned = regions.map { region in
+      if !text.isEmpty { text += "\n" }
+      let start = text.utf8.count
+      text += region.text
+      return WikiPDFTextRegion(text: region.text, bounds: region.bounds, byteRange: start..<text.utf8.count)
+    }
+    return WikiPDFPage(pageIndex: native.pageIndex, label: native.label, text: text,
+      regions: positioned, extraction: extraction)
+  }
+
+  /// Use text selections to map tokens to the PDF. PDFKit's raw glyph indexes
+  /// can omit line separators even when its page strings include them.
+  private static func positionedText(on page: PDFPage, native: WikiPDFPage) throws
+    -> (runs: [WikiPDFTextRegion], tokens: [WikiPDFTextRegion]) {
+    let crop = page.bounds(for: .cropBox)
+    guard page.numberOfCharacters <= 24_000, page.numberOfCharacters == native.text.utf16.count,
+      page.rotation.isMultiple(of: 360), crop.width > 0, crop.height > 0 else { return (native.regions, []) }
+    let text = native.text as NSString
+    let matcher = try NSRegularExpression(pattern: #"\S+"#)
+    let tokens = matcher.matches(in: native.text, range: NSRange(location: 0, length: text.length))
+    var regions: [WikiPDFTextRegion] = []
+    var positionedTokens: [WikiPDFTextRegion] = []
+    var run = ""
+    var region: CGRect?, lastToken: CGRect?
+    var endOfPrevious = 0
+    func finishRun() {
+      if let region, let bounds = normalized(region, in: crop) {
+        regions.append(.init(text: run, bounds: bounds))
+      }
+      run = ""; region = nil; lastToken = nil
+    }
+    for match in tokens {
+      try Task.checkCancellation()
+      let token = text.substring(with: match.range)
+      guard let selection = page.selection(for: match.range), let selected = selection.string,
+        selected.utf8.elementsEqual(token.utf8) else { return (native.regions, []) }
+      let rectangle = selection.bounds(for: page)
+      guard let bounds = normalized(rectangle, in: crop) else { return (native.regions, []) }
+      positionedTokens.append(.init(text: token, bounds: bounds))
+      let separator = text.substring(with: NSRange(location: endOfPrevious, length: match.range.location - endOfPrevious))
+      endOfPrevious = NSMaxRange(match.range)
+      if let previous = lastToken {
+        let height = max(previous.height, rectangle.height)
+        if separator.contains(where: \.isNewline) || abs(rectangle.midY - previous.midY) > height * 0.7
+          || rectangle.minX - previous.maxX > max(12, height * 1.1)
+          || previous.minX - rectangle.maxX > height * 1.1 { finishRun() }
+      }
+      if !run.isEmpty { run += separator }
+      run += token
+      region = region?.union(rectangle) ?? rectangle
+      lastToken = rectangle
+    }
+    finishRun()
+    return (regions, positionedTokens)
   }
 
   private static func extractPage(_ page: PDFPage, index: Int) throws -> WikiPDFPage {

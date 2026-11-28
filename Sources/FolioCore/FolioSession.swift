@@ -263,13 +263,55 @@ public final class FolioSession {
   }
 
   /// Exact current-source quotations, not a generated factual answer.
-  public func knowledgeAnswer(_ question: String, documentID: String? = nil) async throws -> WikiKnowledgeAnswer {
+  public func knowledgeAnswer(_ question: String, documentID: String? = nil,
+    conceptID: String? = nil) async throws -> WikiKnowledgeAnswer {
     try beginOperation(); defer { isBusy = false }
     guard let knowledge else { throw FolioError.noWorkspace }
     try admission?.validate()
-    let result = try await knowledge.answer(question, documentID: documentID)
+    let result = try await knowledge.answer(question, documentID: documentID, conceptID: conceptID)
     try admission?.validate(); try Task.checkCancellation()
     return result
+  }
+
+  /// Direct knowledge lookup needs no embedding model or repeated source search.
+  public func readKnowledgeConcept(id: String) async throws -> WikiKnowledgeConceptRecord {
+    try beginOperation(); defer { isBusy = false }
+    guard let workspace else { throw FolioError.noWorkspace }
+    try admission?.validate()
+    let result = try await workspace.readKnowledgeConcept(id: id)
+    try admission?.validate(); try Task.checkCancellation()
+    return result
+  }
+
+  public func prepareKnowledgeConcept(_ concept: WikiKnowledgeConcept, relativePath: String? = nil,
+    expectedRevision: String? = nil, operationID: UUID) async throws -> WikiPreparedEdit {
+    try beginOperation(); defer { isBusy = false }
+    guard let workspace else { throw FolioError.noWorkspace }
+    try admission?.validate()
+    let plan = try await workspace.prepareKnowledgeConcept(concept, relativePath: relativePath,
+      expectedRevision: expectedRevision, operationID: operationID)
+    try admission?.validate(); try Task.checkCancellation()
+    return plan
+  }
+
+  /// The host executes only the exact plan the user/agent approved.
+  @discardableResult public func executeKnowledgeConcept(_ plan: WikiPreparedEdit) async throws -> WikiWriteReceipt {
+    try beginOperation(); defer { isBusy = false }
+    guard let workspace else { throw FolioError.noWorkspace }
+    try admission?.validate()
+    let receipt = try await workspace.executeKnowledgeConcept(plan)
+    // A known source commit stays committed even if subsequent publication fails.
+    if let current = try? await workspace.refresh(), (try? admission?.validate()) != nil { publish(current) }
+    return receipt
+  }
+
+  public func knowledgeConceptOperationStatus(operationID: UUID) async throws -> WikiKnowledgeConceptOperationStatus {
+    try beginOperation(); defer { isBusy = false }
+    guard let workspace else { throw FolioError.noWorkspace }
+    try admission?.validate()
+    let status = try await workspace.knowledgeConceptOperationStatus(operationID: operationID)
+    try admission?.validate(); try Task.checkCancellation()
+    return status
   }
 
   public func readKnowledgeEvidence(_ evidence: WikiKnowledgeEvidence) async throws -> String {
@@ -279,6 +321,102 @@ public final class FolioSession {
     let text = try await workspace.readKnowledgeEvidence(evidence)
     try admission?.validate(); try Task.checkCancellation()
     return text
+  }
+
+  public func readKnowledgeAssertion(id: String) async throws -> WikiKnowledgeAssertionRecord {
+    try beginOperation(); defer { isBusy = false }
+    guard let workspace else { throw FolioError.noWorkspace }
+    try admission?.validate()
+    let result = try await workspace.readKnowledgeAssertion(id: id)
+    try admission?.validate(); try Task.checkCancellation()
+    return result
+  }
+
+  /// An explicit review snapshot keeps changed Concept links separate from current knowledge.
+  /// The original quotations must still match before the host can show the review.
+  public func reviewKnowledgeAssertion(id: String) async throws -> WikiKnowledgeAssertionReview {
+    try beginOperation(); defer { isBusy = false }
+    guard let workspace else { throw FolioError.noWorkspace }
+    try admission?.validate()
+    let result = try await workspace.reviewKnowledgeAssertion(id: id)
+    try admission?.validate(); try Task.checkCancellation()
+    return result
+  }
+
+  /// Structured knowledge lookup requires neither an embedding nor a generation model.
+  public func knowledgeAssertions(conceptID: String? = nil, documentID: String? = nil,
+    unit: String? = nil, edition: String? = nil, query: String? = nil, limit: Int = 20
+  ) async throws -> WikiKnowledgeAssertionInventory {
+    try beginOperation(); defer { isBusy = false }
+    guard let workspace else { throw FolioError.noWorkspace }
+    try admission?.validate()
+    let result = try await workspace.knowledgeAssertionInventory(conceptID: conceptID, documentID: documentID,
+      unit: unit, edition: edition, query: query, limit: limit)
+    try admission?.validate(); try Task.checkCancellation()
+    return result
+  }
+
+  public func prepareKnowledgeAssertion(_ assertion: WikiKnowledgeAssertion, relativePath: String? = nil,
+    expectedRevision: String? = nil, expectedConceptRevisions: [String: String]? = nil,
+    operationID: UUID) async throws -> WikiPreparedEdit {
+    try beginOperation(); defer { isBusy = false }
+    guard let workspace else { throw FolioError.noWorkspace }
+    try admission?.validate()
+    let plan = try await workspace.prepareKnowledgeAssertion(assertion, relativePath: relativePath,
+      expectedRevision: expectedRevision, expectedConceptRevisions: expectedConceptRevisions, operationID: operationID)
+    try admission?.validate(); try Task.checkCancellation()
+    return plan
+  }
+
+  @discardableResult public func executeKnowledgeAssertion(_ plan: WikiPreparedEdit) async throws -> WikiWriteReceipt {
+    try beginOperation(); defer { isBusy = false }
+    guard let workspace else { throw FolioError.noWorkspace }
+    try admission?.validate()
+    let receipt = try await workspace.executeKnowledgeAssertion(plan)
+    if let current = try? await workspace.refresh(), (try? admission?.validate()) != nil { publish(current) }
+    return receipt
+  }
+
+  public func knowledgeAssertionOperationStatus(operationID: UUID) async throws -> WikiKnowledgeAssertionOperationStatus {
+    try beginOperation(); defer { isBusy = false }
+    guard let workspace else { throw FolioError.noWorkspace }
+    try admission?.validate()
+    let status = try await workspace.knowledgeAssertionOperationStatus(operationID: operationID)
+    try admission?.validate(); try Task.checkCancellation()
+    return status
+  }
+
+  public func knowledgeEvidenceContext(_ evidence: WikiKnowledgeEvidence, limit: Int = 8) async throws -> WikiKnowledgeEvidenceContext {
+    try beginOperation(); defer { isBusy = false }
+    guard let workspace else { throw FolioError.noWorkspace }
+    try admission?.validate()
+    let result = try await workspace.knowledgeEvidenceContext(evidence, limit: limit)
+    try admission?.validate(); try Task.checkCancellation()
+    return result
+  }
+
+  /// The host selects a provider. No default backend, file tools or implicit approval are installed.
+  public func proposeKnowledgeAssertions(_ question: String, evidence: [WikiKnowledgeEvidence],
+    conceptIDs: [String] = [], provider: (any WikiKnowledgeAssertionExtractionProvider)? = nil
+  ) async throws -> [WikiKnowledgeAssertionProposal] {
+    try beginOperation(); defer { isBusy = false }
+    guard let workspace else { throw FolioError.noWorkspace }
+    try admission?.validate()
+    let proposer = WikiKnowledgeAssertionProposer(workspace: workspace, provider: provider)
+    let result = try await proposer.propose(question: question, evidence: evidence, conceptIDs: conceptIDs)
+    try admission?.validate(); try Task.checkCancellation()
+    return result
+  }
+
+  public func prepareKnowledgeAssertion(_ proposal: WikiKnowledgeAssertionProposal, relativePath: String? = nil,
+    expectedRevision: String? = nil, operationID: UUID) async throws -> WikiPreparedEdit {
+    try beginOperation(); defer { isBusy = false }
+    guard let workspace else { throw FolioError.noWorkspace }
+    try admission?.validate()
+    let plan = try await workspace.prepareKnowledgeAssertion(proposal, relativePath: relativePath,
+      expectedRevision: expectedRevision, operationID: operationID)
+    try admission?.validate(); try Task.checkCancellation()
+    return plan
   }
 
   public func previewKnowledgePDF(_ evidence: WikiKnowledgeEvidence) async throws -> WikiKnowledgePDFPreview {

@@ -24,7 +24,7 @@ directory .forUploading은 accessor 뒤 임시 archive가 사라질 수 있어 a
 
 iOS named system index는 앱이 선택한 KnowledgeKit 보호 등급을 사용한다. 서명 앱의 `KnowledgeDataProtection=after-first-unlock` 설정은 인덱스에 Class C를 선택한다. 현재 query는 별도로 `.complete` protectionClasses를 지정한다. 이 속성은 query 객체의 것이며 context의 것이 아니다. 이 설정 차이의 실제 검색 영향은 검증하지 않았다. [Apple CSSearchableIndex](https://developer.apple.com/documentation/corespotlight/csssearchableindex), [Apple CSSearchQuery.protectionClasses](https://developer.apple.com/documentation/corespotlight/cssearchquery/protectionclasses).
 
-이 결정은 기능 parity와 owner 계약에 대한 판단이다. signed sync·lock·접근성·relevance·performance의 실측 인증은 [현재 상태](IMPLEMENTATION_STATUS.md)의 남은 gate다.
+이 결정은 기능 parity와 owner 계약에 대한 판단이다. signed sync·lock·접근성·relevance·performance의 실측 인증은 [현재 상태](RELEASE.md#검증-범위)의 남은 gate다.
 
 ## 기존 자료의 호환 경계
 

@@ -1,5 +1,6 @@
 import FolioKnowledge
 import FolioKnowledgeApple
+import FolioSemanticModels
 import Foundation
 import PDFKit
 import SwiftUI
@@ -7,8 +8,10 @@ import SwiftUI
 /// One sheet owns the request, its admitted evidence, and the lifetime of its PDF snapshots.
 struct FolioKnowledgeQueryView: View {
   let model: WikiAppModel
-  let window: WikiWindowState
+  let window: WikiWindowState?
   let documentID: String?
+  let selectionSource: WikiKnowledgeSource?
+  let onSelectEvidence: ((WikiKnowledgeEvidence) -> Void)?
   @Environment(\.dismiss) private var dismiss
   @Environment(\.colorScheme) private var scheme
   @FocusState private var questionFocused: Bool
@@ -18,12 +21,11 @@ struct FolioKnowledgeQueryView: View {
   @State private var answer: WikiKnowledgeAnswer?
   @State private var message: String?
   @State private var detail: String?
-  @State private var information = false
   @State private var writing = false
   @State private var session: Session?
   @State private var task: Task<Void, Never>?
   @State private var operation = UUID()
-  @State private var sourceSelection: SourceSelection?
+  @State private var sheet: Sheet?
 
   private enum Phase: Equatable {
     case ready, finding, opening, unavailable
@@ -35,20 +37,26 @@ struct FolioKnowledgeQueryView: View {
     let generation: Int
     let root: URL
   }
-  private struct SourceSelection: Identifiable {
-    enum Content {
-      case pdf(WikiKnowledgePDFPreview)
-      case markdown(WikiDocument, sectionID: String, location: String)
+  private enum Sheet: Identifiable {
+    case information, source(FolioKnowledgeSourceSelection), concept(WikiKnowledgeEvidence)
+    case assertion(WikiKnowledgeEvidence), assertions(documentID: String?, conceptID: String?)
+    var id: String {
+      switch self {
+      case .information: "information"
+      case .source(let source): source.id.uuidString
+      case .concept(let evidence): "concept:" + evidence.id
+      case .assertion(let evidence): "assertion:" + evidence.id
+      case .assertions(let documentID, let conceptID): "assertions:" + (documentID ?? "all") + (conceptID ?? "")
+      }
     }
-    let id = UUID()
-    let title: String
-    let content: Content
   }
 
-  init(model: WikiAppModel, window: WikiWindowState, documentID: String? = nil, initialQuestion: String = "") {
+  init(model: WikiAppModel, window: WikiWindowState? = nil, documentID: String? = nil, initialQuestion: String = "",
+    selectionSource: WikiKnowledgeSource? = nil, onSelectEvidence: ((WikiKnowledgeEvidence) -> Void)? = nil) {
     self.model = model
     self.window = window
     self.documentID = documentID
+    self.selectionSource = selectionSource; self.onSelectEvidence = onSelectEvidence
     _question = State(initialValue: initialQuestion)
   }
 
@@ -78,7 +86,7 @@ struct FolioKnowledgeQueryView: View {
       }
       .background(FolioTheme.paper(scheme)).tint(FolioTheme.accent(scheme))
       .safeAreaInset(edge: .top, spacing: 0) { questionField }
-      .navigationTitle("근거 찾기")
+      .navigationTitle(onSelectEvidence == nil ? "근거 찾기" : "근거 추가")
       #if os(iOS)
       .navigationBarTitleDisplayMode(.inline)
       #endif
@@ -87,8 +95,12 @@ struct FolioKnowledgeQueryView: View {
           Button("닫기") { task?.cancel(); dismiss() }.disabled(writing)
         }
         ToolbarItem(placement: .primaryAction) {
-          Button("검색 정보", systemImage: "info.circle") { information = true }
-            .labelStyle(.iconOnly).accessibilityIdentifier("knowledge-options")
+          Menu("검색 옵션", systemImage: "ellipsis") {
+            Button("저장한 주장", systemImage: "text.book.closed") {
+              sheet = .assertions(documentID: documentID, conceptID: nil)
+            }.accessibilityIdentifier("knowledge-saved-assertions")
+            Button("검색 정보", systemImage: "info.circle") { sheet = .information }
+          }.labelStyle(.iconOnly).accessibilityIdentifier("knowledge-options")
         }
       }
       .interactiveDismissDisabled(writing)
@@ -99,17 +111,22 @@ struct FolioKnowledgeQueryView: View {
       .onChange(of: model.openedSourceRoot) { _, _ in invalidate() }
       .onChange(of: model.hasOpenWorkspace) { _, open in if !open { invalidate() } }
       .onDisappear { task?.cancel(); releaseResources() }
-      .sheet(isPresented: $information) { informationView }
-      .sheet(item: $sourceSelection) { selection in
-        if let session, workspaceIsCurrent(session) {
-          switch selection.content {
-          case .pdf(let preview):
-            FolioKnowledgePDFView(preview: preview, title: selection.title)
-          case .markdown(let document, let sectionID, let location):
-            FolioKnowledgeMarkdownView(document: document, sectionID: sectionID, location: location)
+      .sheet(item: $sheet) { destination in
+        switch destination {
+        case .information: informationView
+        case .concept(let evidence):
+          FolioKnowledgeConceptView(model: model, evidence: evidence, initialName: question)
+        case .assertion(let evidence):
+          FolioKnowledgeAssertionView(model: model, focus: evidence, candidates: answer?.evidence ?? [evidence],
+            conceptID: answer?.concepts?.selectedConceptID)
+        case .assertions(let documentID, let conceptID):
+          FolioKnowledgeAssertionsView(model: model, documentID: documentID, conceptID: conceptID)
+        case .source(let selection):
+          if let session, workspaceIsCurrent(session) {
+            FolioKnowledgeSourceView(selection: selection)
+          } else {
+            ContentUnavailableView("자료함을 다시 열어 주세요", systemImage: "doc.richtext")
           }
-        } else {
-          ContentUnavailableView("자료함을 다시 열어 주세요", systemImage: "doc.richtext")
         }
       }
     }
@@ -150,21 +167,39 @@ struct FolioKnowledgeQueryView: View {
 
   @ViewBuilder private func results(_ answer: WikiKnowledgeAnswer) -> some View {
     let coverage = answer.coverage
+    if let concepts = answer.concepts, concepts.isAmbiguous {
+      VStack(alignment: .leading, spacing: 8) {
+        Text("어떤 뜻으로 찾으세요?").font(.subheadline)
+        ForEach(concepts.choices) { choice in
+          Button {
+            find(conceptID: choice.id)
+          } label: {
+            VStack(alignment: .leading, spacing: 3) {
+              Text(choice.name + (choice.domain.isEmpty ? "" : " · " + choice.domain))
+              if !choice.sourceTitle.isEmpty { Text(choice.sourceTitle).font(.caption).foregroundStyle(.secondary) }
+            }
+          }.buttonStyle(.bordered)
+        }
+      }.padding(.vertical, 12)
+    }
     if !coverage.complete || (answer.semanticUsed && !coverage.semanticComplete) {
       Label(coverage.unreadablePages > 0 ? "읽지 못한 PDF 페이지가 있습니다." : "일부 자료만 확인했습니다.",
         systemImage: "exclamationmark.circle")
         .font(.callout).foregroundStyle(.secondary).padding(.vertical, 12)
     }
-    if answer.evidence.isEmpty {
+    let visible = answer.evidence.filter { selectionSource == nil || $0.source == selectionSource }
+    if visible.isEmpty {
       ContentUnavailableView("관련 근거를 찾지 못했습니다", systemImage: "text.magnifyingglass",
         description: Text("다른 표현이나 검색 방식으로 찾아보세요."))
     } else {
-      ViewThatFits(in: .horizontal) {
-        HStack { resultCount(answer); Spacer(); saveButton(answer) }
-        VStack(alignment: .leading, spacing: 6) { resultCount(answer); saveButton(answer) }
-      }.padding(.vertical, 10)
+      if onSelectEvidence == nil {
+        ViewThatFits(in: .horizontal) {
+          HStack { resultCount(answer); Spacer(); saveButton(answer) }
+          VStack(alignment: .leading, spacing: 6) { resultCount(answer); saveButton(answer) }
+        }.padding(.vertical, 10)
+      }
       Divider()
-      ForEach(answer.evidence) { evidence in evidenceRow(evidence) }
+      ForEach(visible) { evidence in evidenceRow(evidence) }
     }
   }
 
@@ -180,16 +215,36 @@ struct FolioKnowledgeQueryView: View {
 
   private func evidenceRow(_ evidence: WikiKnowledgeEvidence) -> some View {
     VStack(alignment: .leading, spacing: 8) {
-      Button { open(evidence) } label: {
-        HStack(alignment: .firstTextBaseline, spacing: 8) {
-          Text(evidence.source.title + " · " + evidence.displayLocation).fontWeight(.semibold)
-            .multilineTextAlignment(.leading)
-          Image(systemName: "arrow.up.right").font(.caption)
-        }.frame(minHeight: 44, alignment: .leading).contentShape(.rect)
+      HStack(alignment: .firstTextBaseline, spacing: 8) {
+        Button { open(evidence) } label: {
+          HStack(alignment: .firstTextBaseline, spacing: 8) {
+            Text(evidence.source.title + " · " + evidence.displayLocation).fontWeight(.semibold)
+              .multilineTextAlignment(.leading)
+            Image(systemName: "arrow.up.right").font(.caption)
+          }.frame(maxWidth: .infinity, minHeight: 44, alignment: .leading).contentShape(.rect)
+        }
+        .font(.callout).disabled(phase.isBusy || writing)
+        .accessibilityHint("원문 위치를 엽니다.")
+        .accessibilityIdentifier("knowledge-source-" + evidence.id)
+        if let onSelectEvidence {
+          Button { onSelectEvidence(evidence); dismiss() } label: {
+            Label("추가", systemImage: "plus").frame(minWidth: 44, minHeight: 44).contentShape(.rect)
+          }
+            .disabled(phase.isBusy || writing).accessibilityIdentifier("knowledge-select-" + evidence.id)
+        } else { Menu {
+          Button("주장 저장", systemImage: "text.quote") { sheet = .assertion(evidence) }
+          Button("저장한 주장", systemImage: "text.book.closed") {
+            sheet = .assertions(documentID: evidence.source.documentID, conceptID: answer?.concepts?.selectedConceptID)
+          }
+          Button("용어 연결", systemImage: "link") { sheet = .concept(evidence) }
+        } label: {
+          Image(systemName: "ellipsis").frame(minWidth: 44, minHeight: 44)
+        }
+        .accessibilityLabel("근거 추가 작업")
+        .accessibilityIdentifier("knowledge-evidence-options-" + evidence.id)
+        .disabled(phase.isBusy || writing)
+        }
       }
-      .font(.callout).disabled(phase.isBusy || writing)
-      .accessibilityHint("원문 위치를 엽니다.")
-      .accessibilityIdentifier("knowledge-source-" + evidence.id)
       Text(verbatim: evidence.text).font(.body).lineSpacing(4)
         .textSelection(.enabled).fixedSize(horizontal: false, vertical: true)
     }
@@ -203,6 +258,7 @@ struct FolioKnowledgeQueryView: View {
         VStack(alignment: .leading, spacing: 16) {
           Text("결과는 저장한 원문에서 가져온 인용입니다. 출처를 열어 문맥을 확인할 수 있습니다.")
           Text("키워드는 입력한 단어를, 뜻은 비슷한 한국어·영어 표현을 찾습니다.")
+          Text("‘스캔 인식’은 이미지에서 읽은 글자입니다. 수치와 수식 기호는 원문에서 확인할 수 있습니다.")
           if let answer {
             let coverage = answer.coverage
             Text("자료 \(coverage.sourceCount)개 · 구간 \(coverage.blockCount)개")
@@ -213,12 +269,18 @@ struct FolioKnowledgeQueryView: View {
                 }
               }
             }
+            if let concepts = answer.concepts, !concepts.complete {
+              Text("일부 용어 연결을 확인하지 못했습니다. 원문 검색 결과는 유지됩니다.")
+              ForEach(Array(concepts.diagnostics.enumerated()), id: \.offset) { item in
+                Text(item.element).font(.callout).textSelection(.enabled)
+              }
+            }
           }
           if let detail { Text(detail).font(.caption.monospaced()).textSelection(.enabled) }
         }.padding(24)
       }
       .navigationTitle("자료 검색 정보")
-      .toolbar { ToolbarItem(placement: .cancellationAction) { Button("닫기") { information = false } } }
+      .toolbar { ToolbarItem(placement: .cancellationAction) { Button("닫기") { sheet = nil } } }
     }.folioSheetSize(width: 540, height: 420)
   }
 
@@ -238,14 +300,17 @@ struct FolioKnowledgeQueryView: View {
     session = Session(service: service, generation: model.workspaceGeneration, root: root)
   }
 
-  private func find() {
+  private func find() { find(conceptID: nil) }
+
+  private func find(conceptID: String?) {
     guard canFind else { return }
     let submitted = question.trimmingCharacters(in: .whitespacesAndNewlines)
     let useSemantic = searchMode == .meaning
     questionFocused = false
     clearResult()
     run(.finding) { captured in
-      let result = try await captured.service.knowledgeAnswer(submitted, documentID: documentID, useSemantic: useSemantic)
+      let result = try await captured.service.knowledgeAnswer(submitted, documentID: documentID,
+        useSemantic: useSemantic, conceptID: conceptID)
       guard isCurrent(captured) else { return }
       answer = result
     }
@@ -253,18 +318,9 @@ struct FolioKnowledgeQueryView: View {
 
   private func open(_ evidence: WikiKnowledgeEvidence) {
     run(.opening) { captured in
-      let content: SourceSelection.Content
-      if evidence.source.kind == .pdf {
-        let preview = try await captured.service.workspace.previewKnowledgePDF(evidence)
-        content = .pdf(preview)
-      } else if let reference = evidence.markdownReference {
-        let document = try await captured.service.workspace.previewKnowledgeMarkdown(evidence)
-        content = .markdown(document, sectionID: reference.sectionID, location: evidence.displayLocation)
-      } else {
-        throw WikiError.changedSource
-      }
+      let selection = try await FolioKnowledgeSourceSelection.load(evidence, in: captured.service.workspace)
       guard isCurrent(captured) else { return }
-      sourceSelection = SourceSelection(title: evidence.source.title, content: content)
+      sheet = .source(selection)
     }
   }
 
@@ -285,6 +341,8 @@ struct FolioKnowledgeQueryView: View {
           message = reason
         case WikiSemanticEmbeddingError.tokenBudget:
           message = error.localizedDescription
+        case SemanticResourceError.systemPressure:
+          message = "기기의 메모리 부담이 줄어든 뒤 다시 시도하거나 키워드로 찾아 주세요."
         default:
           message = "자료를 확인하지 못했습니다. 다시 찾아 주세요."
         }
@@ -296,7 +354,7 @@ struct FolioKnowledgeQueryView: View {
   }
 
   private func save(_ answer: WikiKnowledgeAnswer) {
-    guard !phase.isBusy, !writing, !model.isBusy, let captured = session, isCurrent(captured) else { return }
+    guard let window, !phase.isBusy, !writing, !model.isBusy, let captured = session, isCurrent(captured) else { return }
     writing = true; message = nil
     task = Task { @MainActor in
       defer { writing = false }
@@ -310,7 +368,7 @@ struct FolioKnowledgeQueryView: View {
 
   private func invalidate() {
     task?.cancel(); task = nil; operation = UUID(); releaseResources()
-    answer = nil; sourceSelection = nil; session = nil
+    answer = nil; sheet = nil; session = nil
     phase = .unavailable; message = "자료함이 닫혔거나 바뀌었습니다. 다시 열어 주세요."; detail = nil
   }
 
@@ -324,8 +382,40 @@ struct FolioKnowledgeQueryView: View {
   }
 }
 
-/// An admitted Markdown snapshot is read in place, keeping the question and results below it.
-private struct FolioKnowledgeMarkdownView: View {
+/// Quotations, concepts and assertions open the same admitted in-memory source snapshot.
+struct FolioKnowledgeSourceSelection: Identifiable {
+  enum Content {
+    case pdf(WikiKnowledgePDFPreview)
+    case markdown(WikiDocument, sectionID: String, location: String)
+  }
+  let id = UUID()
+  let title: String
+  let content: Content
+
+  static func load(_ evidence: WikiKnowledgeEvidence, in workspace: WikiWorkspace) async throws -> Self {
+    let content: Content
+    if evidence.source.kind == .pdf { content = .pdf(try await workspace.previewKnowledgePDF(evidence)) }
+    else if let reference = evidence.markdownReference {
+      content = .markdown(try await workspace.previewKnowledgeMarkdown(evidence),
+        sectionID: reference.sectionID, location: evidence.displayLocation)
+    } else { throw WikiError.changedSource }
+    return .init(title: evidence.source.title, content: content)
+  }
+}
+
+struct FolioKnowledgeSourceView: View {
+  let selection: FolioKnowledgeSourceSelection
+  var body: some View {
+    switch selection.content {
+    case .pdf(let preview): FolioKnowledgePDFView(preview: preview, title: selection.title)
+    case .markdown(let document, let sectionID, let location):
+      FolioKnowledgeMarkdownView(document: document, sectionID: sectionID, location: location)
+    }
+  }
+}
+
+/// An admitted Markdown snapshot is read in place over the query or saved note.
+struct FolioKnowledgeMarkdownView: View {
   let document: WikiDocument
   let location: String
   @State private var anchor: String?
@@ -389,8 +479,14 @@ struct FolioKnowledgePDFView: View {
       .navigationBarTitleDisplayMode(.inline)
       #endif
       .safeAreaInset(edge: .top, spacing: 0) {
-        if let title {
-          Text(title).font(.subheadline)
+        if title != nil || preview.usesOCR {
+          VStack(alignment: .leading, spacing: 4) {
+            if let title { Text(title).font(.subheadline) }
+            if preview.usesOCR {
+              Text("스캔 인식 영역 · 실제 글자와 기호를 원문에서 확인하세요.")
+                .font(.caption).foregroundStyle(.secondary)
+            }
+          }
             .frame(maxWidth: .infinity, alignment: .leading)
             .padding(.horizontal, 20).padding(.vertical, 8).background(.background)
         }

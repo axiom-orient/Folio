@@ -203,10 +203,13 @@ public enum WikiPath {
   }
 
   public static func resolveLink(_ link: String, from source: String) -> String? {
-    guard !link.contains(":"), !link.hasPrefix("/"), !link.contains("\\") else { return nil }
-    let path = String(link.split(separator: "#", maxSplits: 1, omittingEmptySubsequences: false)[0])
+    guard !link.hasPrefix("/"), !link.contains("\\") else { return nil }
+    let path = String(link.prefix { $0 != "#" })
+    // Only the first path segment can be confused with a URI scheme.
+    guard !path.prefix(while: { $0 != "/" }).contains(":") else { return nil }
     guard let decoded = path.removingPercentEncoding,
-      !decoded.contains(":"), !decoded.hasPrefix("/"), !decoded.contains("\\"), !decoded.contains("\0")
+      !decoded.prefix(while: { $0 != "/" }).contains(":"),
+      !decoded.hasPrefix("/"), !decoded.contains("\\"), !decoded.contains("\0")
     else { return nil }
     if decoded.isEmpty { return source }
     var components = source.split(separator: "/").dropLast().map(String.init)
@@ -217,5 +220,15 @@ public enum WikiPath {
       } else { components.append(String(component)) }
     }
     return try? validate(components.joined(separator: "/"))
+  }
+
+  package static func linkFromNotesDirectory(to path: String) throws -> String {
+    let path = try validate(path)
+    var allowed = CharacterSet.urlPathAllowed
+    allowed.remove(charactersIn: "#?%()[]<>:")
+    guard let encoded = path.addingPercentEncoding(withAllowedCharacters: allowed) else {
+      throw WikiError.invalidPath(path)
+    }
+    return "../" + encoded
   }
 }

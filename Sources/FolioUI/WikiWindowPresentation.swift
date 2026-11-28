@@ -84,6 +84,14 @@ struct WikiWindowPresentation: ViewModifier {
       .sheet(item: $window.fileBrowserContext) { WikiFileBrowserView(model: model, window: window, context: $0) }
       .sheet(item: $window.fileAction) { WikiFileActionView(model: model, action: $0) }
       .sheet(item: $window.metadataSelection) { WikiMetadataEditView(model: model, selection: $0) }
+      .sheet(item: $window.knowledgeRequest) { request in
+        if request.context == model.documentContext, request.workspaceGeneration == model.workspaceGeneration {
+          FolioKnowledgeQueryView(model: model, window: window, documentID: request.documentID,
+            initialQuestion: request.initialQuestion).id(request.id)
+        }
+      }
+      .onChange(of: model.workspaceGeneration) { _, _ in window.knowledgeRequest = nil }
+      .onChange(of: model.hasOpenWorkspace) { _, isOpen in if !isOpen { window.knowledgeRequest = nil } }
       .sheet(item: $model.conflictSelection) { WikiConflictView(model: model, selection: $0) }
       .sheet(item: $model.repairSelection) { WikiSourceRepairView(model: model, selection: $0) }
       .sheet(item: $model.mergeSelection) { WikiDocumentMergeView(model: model, selection: $0) }

@@ -48,7 +48,7 @@ import FolioDevelopment
   --root 기본값은 현재 작업 폴더입니다. --dry-run은 명령과 동작을 JSON으로만 출력합니다.
   DEVELOPER_DIR와 FOLIO_DEVELOPMENT_TEAM 환경 설정을 사용하며 다른 환경은 상속합니다.
   개발 출력은 ~/Library/Developer/FolioBuilds에 보관합니다. FOLIO_BUILD_ROOT로 외부 절대 경로를 지정할 수 있습니다.
-  mac은 로컬 개발 번들, ios는 서명 없는 로컬 시뮬레이터 빌드입니다.
+  mac은 로컬 개발 번들, ios는 개발팀 계정 없이 임시 서명한 로컬 시뮬레이터 빌드입니다.
   cloud는 프로비저닝을 포함한 서명 빌드이며 설치·실행은 --install-iphone을 지정할 때 수행합니다.
   """
 }

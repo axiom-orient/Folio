@@ -7,6 +7,16 @@ public struct WikiTextPatch: Codable, Sendable {
 }
 
 public enum WikiMarkdownEditor {
+  /// YAML treats these Unicode separators as line breaks even inside a quoted scalar.
+  /// All saved knowledge metadata uses the same escaping without changing JSON values.
+  package static func jsonMetadataScalar(_ data: Data) throws -> String {
+    guard let json = String(data: data, encoding: .utf8) else { throw WikiError.invalidSource("Metadata must be UTF-8 JSON.") }
+    let text = json.replacingOccurrences(of: "\u{85}", with: "\\u0085")
+      .replacingOccurrences(of: "\u{2028}", with: "\\u2028")
+      .replacingOccurrences(of: "\u{2029}", with: "\\u2029")
+    return "'" + text.replacingOccurrences(of: "'", with: "''") + "'"
+  }
+
   /// Give an imported note an ID without re-emitting its YAML or changing body bytes.
   /// Existing IDs are preserved; the workspace validates duplicates/types/relations.
   public static func addingStableID(bytes: Data, id: String) throws -> Data {

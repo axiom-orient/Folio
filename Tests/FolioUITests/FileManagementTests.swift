@@ -278,32 +278,33 @@ func fileManagementRejectsPathsOutsideTheNotesOwner(destination: String) async t
     try fixture.write("---\nid: external-backlink\n---\n# Index\n[First](Folder/a.md#first-child)\n", path: "notes/index.md")
     let originalRevision = try await fixture.entry("notes/Folder").revision
 
-    let moved = try await fixture.workspace.performFileOperation(.move(path: "notes/Folder", to: "notes/Renamed"), expectedRevision: originalRevision)
+    let renamed = "notes/Renamed:2026"
+    let moved = try await fixture.workspace.performFileOperation(.move(path: "notes/Folder", to: renamed), expectedRevision: originalRevision)
     #expect(!fixture.exists("notes/Folder"))
-    #expect(try fixture.text("notes/Renamed/a.md") == first)
-    #expect(try fixture.text("notes/Renamed/Sub/b.md") == second)
-    #expect(try fixture.text("notes/Renamed/payload.txt") == "Non-Markdown child")
-    #expect(try fixture.bytes("notes/Renamed/.private.bin") == hidden)
-    #expect(fixture.exists("notes/Renamed/Empty/Nested"))
+    #expect(try fixture.text(renamed + "/a.md") == first)
+    #expect(try fixture.text(renamed + "/Sub/b.md") == second)
+    #expect(try fixture.text(renamed + "/payload.txt") == "Non-Markdown child")
+    #expect(try fixture.bytes(renamed + "/.private.bin") == hidden)
+    #expect(fixture.exists(renamed + "/Empty/Nested"))
     #expect(Set(moved.documentMoves.map(\.newID)) == ["first-child", "second-child"])
     let snapshot = try await fixture.workspace.refresh()
     let incoming = try #require(snapshot.documents.first { $0.id == "external-backlink" })
-    #expect(resolvedFileManagementLinks(incoming).contains("notes/Renamed/a.md"))
+    #expect(resolvedFileManagementLinks(incoming).contains(renamed + "/a.md"))
 
-    let movedRevision = try await fixture.entry("notes/Renamed").revision
-    let removal = try await fixture.workspace.performFileOperation(.trash(path: "notes/Renamed"), expectedRevision: movedRevision)
+    let movedRevision = try await fixture.entry(renamed).revision
+    let removal = try await fixture.workspace.performFileOperation(.trash(path: renamed), expectedRevision: movedRevision)
     let id = try #require(removal.trashID)
     let trash = try #require(try await fixture.workspace.trashEntries().first { $0.id == id })
     #expect(trash.isDirectory)
     #expect(trash.isAvailable)
-    #expect(!fixture.exists("notes/Renamed"))
+    #expect(!fixture.exists(renamed))
     #expect(try await fixture.workspace.refresh().documents.allSatisfy { !["first-child", "second-child"].contains($0.id) })
     _ = try await fixture.workspace.performFileOperation(.restore(id: id), expectedRevision: trash.revision)
-    #expect(try fixture.text("notes/Renamed/a.md") == first)
-    #expect(try fixture.text("notes/Renamed/Sub/b.md") == second)
-    #expect(try fixture.text("notes/Renamed/payload.txt") == "Non-Markdown child")
-    #expect(try fixture.bytes("notes/Renamed/.private.bin") == hidden)
-    #expect(try fixture.url("notes/Renamed/Empty/Nested").resourceValues(forKeys: [.isDirectoryKey]).isDirectory == true)
+    #expect(try fixture.text(renamed + "/a.md") == first)
+    #expect(try fixture.text(renamed + "/Sub/b.md") == second)
+    #expect(try fixture.text(renamed + "/payload.txt") == "Non-Markdown child")
+    #expect(try fixture.bytes(renamed + "/.private.bin") == hidden)
+    #expect(try fixture.url(renamed + "/Empty/Nested").resourceValues(forKeys: [.isDirectoryKey]).isDirectory == true)
     #expect(try await fixture.workspace.trashEntries().allSatisfy { $0.id != id })
   }
 }

@@ -9,9 +9,9 @@ root = pathlib.Path(__file__).resolve().parents[2]
 parser = argparse.ArgumentParser(description=__doc__)
 parser.add_argument('--output', type=pathlib.Path, required=True)
 args = parser.parse_args()
-resources = root / 'Sources/FolioSemanticModels/Resources'
-e = Tokenizer.from_file(str(resources / 'tokenizer.json'))
-r = Tokenizer.from_file(str(resources / 'Relevance/tokenizer.json'))
+reference = pathlib.Path(__file__).resolve().parent / 'ReferenceTokenizers'
+e = Tokenizer.from_file(str(reference / 'tokenizer.json'))
+r = Tokenizer.from_file(str(reference / 'Relevance/tokenizer.json'))
 canonical = root / 'Tests/FolioKnowledgeTests/Fixtures/SemanticCorpus.json'
 notes = json.loads(canonical.read_bytes())['notes']
 short, long = [], []

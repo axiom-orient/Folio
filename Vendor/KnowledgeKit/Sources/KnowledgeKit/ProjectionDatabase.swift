@@ -5,8 +5,10 @@ import FolioKnowledgeSQLite
 final class ProjectionDatabase {
   enum Value { case text(String), integer(Int64), null }
   private var handle: OpaquePointer?
+  let readOnly: Bool
 
   init(url: URL, readOnly: Bool = false) throws {
+    self.readOnly = readOnly
     let flags = (readOnly ? SQLITE_OPEN_READONLY : SQLITE_OPEN_CREATE | SQLITE_OPEN_READWRITE) | SQLITE_OPEN_FULLMUTEX
     guard sqlite3_open_v2(url.path, &handle, flags, nil) == SQLITE_OK else {
       let message = handle.map { String(cString: sqlite3_errmsg($0)) } ?? "Cannot open projection."
@@ -36,6 +38,39 @@ final class ProjectionDatabase {
     try execute("CREATE TABLE IF NOT EXISTS knowledge_blocks (id TEXT PRIMARY KEY, source_id TEXT NOT NULL REFERENCES knowledge_documents(id) ON DELETE CASCADE, ordinal INTEGER NOT NULL, text TEXT NOT NULL, payload TEXT NOT NULL, vector_model_id TEXT, vector_json TEXT)")
     try execute("CREATE INDEX IF NOT EXISTS knowledge_blocks_source ON knowledge_blocks(source_id)")
     try execute("CREATE VIRTUAL TABLE IF NOT EXISTS knowledge_fts USING fts5(block_id UNINDEXED, source_id UNINDEXED, text, tokenize='unicode61')")
+    _ = try ensureOntologyComponent()
+  }
+
+  /// A component epoch also detects resets performed by older app versions.
+  func ensureOntologyComponent(forWriting: Bool = false) throws -> Bool {
+    let version = try rows("SELECT value FROM metadata WHERE key='ontology_schema'").first?.first ?? nil
+    let currentStore = try rows("SELECT value FROM metadata WHERE key='store_id'").first?.first ?? nil
+    let componentStore = try rows("SELECT value FROM metadata WHERE key='ontology_store_id'").first?.first ?? nil
+    let tablesPresent = try rows("SELECT count(*) FROM sqlite_master WHERE type='table' AND name IN ('ontology_records','ontology_labels','ontology_mentions')").first?.first == "3"
+    if readOnly { return version == "1" && currentStore != nil && componentStore == currentStore && tablesPresent }
+    guard version == nil || version == "1" else {
+      if forWriting { throw WikiError.database("Unsupported ontology component; preserve source and rebuild with a compatible app.") }
+      return false
+    }
+    if version == "1", currentStore != nil, componentStore == currentStore, tablesPresent { return true }
+    try transaction {
+      try execute("CREATE TABLE IF NOT EXISTS ontology_records (id TEXT PRIMARY KEY, revision TEXT NOT NULL, payload TEXT NOT NULL)")
+      try execute("CREATE TABLE IF NOT EXISTS ontology_labels (record_id TEXT NOT NULL REFERENCES ontology_records(id) ON DELETE CASCADE, label_key TEXT NOT NULL, phrase_key TEXT, label TEXT NOT NULL, PRIMARY KEY(record_id,label_key))")
+      try execute("CREATE INDEX IF NOT EXISTS ontology_labels_key ON ontology_labels(label_key)")
+      try execute("CREATE TABLE IF NOT EXISTS ontology_mentions (record_id TEXT NOT NULL REFERENCES ontology_records(id) ON DELETE CASCADE, id TEXT NOT NULL, source_id TEXT NOT NULL, source_revision TEXT NOT NULL, payload TEXT NOT NULL, PRIMARY KEY(record_id,id))")
+      try execute("CREATE INDEX IF NOT EXISTS ontology_mentions_source ON ontology_mentions(source_id,source_revision)")
+      try clearOntologyComponent()
+      try execute("INSERT OR REPLACE INTO metadata(key,value) VALUES ('ontology_schema','1')")
+      try execute("INSERT OR REPLACE INTO metadata(key,value) SELECT 'ontology_store_id',value FROM metadata WHERE key='store_id'")
+    }
+    return true
+  }
+
+  func clearOntologyComponent() throws {
+    try execute("DELETE FROM ontology_labels")
+    try execute("DELETE FROM ontology_mentions")
+    try execute("DELETE FROM ontology_records")
+    try execute("DELETE FROM metadata WHERE key='ontology_manifest'")
   }
 
   deinit { if let handle { sqlite3_close(handle) } }

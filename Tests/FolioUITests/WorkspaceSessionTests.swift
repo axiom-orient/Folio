@@ -273,7 +273,7 @@ private enum WorkspaceJobTestError: Error, LocalizedError {
   await session.close(prepare: {})
 }
 
-@Test @MainActor func workspaceIndexFailuresAreReportedOnlyForTheCurrentGeneration() async throws {
+@Test @MainActor func workspaceIndexFailuresStayInCurrentDiagnosticWithoutInterruptingReading() async throws {
   let fixture = try SessionFixture()
   defer { fixture.cleanup() }
   var messages: [String] = []
@@ -282,10 +282,11 @@ private enum WorkspaceJobTestError: Error, LocalizedError {
   session.onMessage = { messages.append($0) }
   _ = try await openSession(session, fixture: fixture)
 
-  #expect(try await waitForWorkspaceCondition { !messages.isEmpty })
-  #expect(messages.count == 1)
-  #expect(messages.first?.contains("Expected workspace job failure") == true)
+  #expect(try await waitForWorkspaceCondition { session.systemIndexDiagnostic != nil })
+  #expect(messages.isEmpty)
+  #expect(session.systemIndexDiagnostic?.contains("Expected workspace job failure") == true)
   await session.close(prepare: {})
+  #expect(session.systemIndexDiagnostic == nil)
 }
 
 @Test @MainActor func revokedWorkspaceJobsCannotReportLateFailuresIntoTheNextLifetime() async throws {
@@ -308,6 +309,7 @@ private enum WorkspaceJobTestError: Error, LocalizedError {
   await gate.release()
   await session.close(prepare: {})
   #expect(messages.isEmpty)
+  #expect(session.systemIndexDiagnostic == nil)
 }
 
 @Test @MainActor func mobileRevocationInvalidatesSynchronouslyAndCheckpointsDraftsBeforeDrain() async throws {

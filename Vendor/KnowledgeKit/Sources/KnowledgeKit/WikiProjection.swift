@@ -37,6 +37,7 @@ public actor WikiProjection {
 
   /// Explicit local-cache recovery. Source and operation receipts are untouched.
   public func reset() throws {
+    let ontologyAvailable = try database.ensureOntologyComponent()
     try database.transaction {
       try database.execute("DELETE FROM fts_sections")
       try database.execute("DELETE FROM documents")
@@ -44,8 +45,12 @@ public actor WikiProjection {
       try database.execute("DELETE FROM derived_values")
       try database.execute("DELETE FROM knowledge_fts")
       try database.execute("DELETE FROM knowledge_documents")
+      if ontologyAvailable { try database.clearOntologyComponent() }
       try database.execute("DELETE FROM metadata WHERE key IN ('snapshot','snapshot_token')")
       try database.execute("UPDATE metadata SET value=? WHERE key='store_id'", [.text(UUID().uuidString)])
+      if ontologyAvailable {
+        try database.execute("UPDATE metadata SET value=(SELECT value FROM metadata WHERE key='store_id') WHERE key='ontology_store_id'")
+      }
     }
     cachedSnapshot = nil; cachedSnapshotToken = nil; reconciledAdapters = []
   }

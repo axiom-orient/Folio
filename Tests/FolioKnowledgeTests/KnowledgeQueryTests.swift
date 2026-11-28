@@ -95,6 +95,72 @@ import FolioKnowledgeApple
     #expect(try String(contentsOf: fixture.note, encoding: .utf8).contains("changed quotation"))
     await fixture.workspace.close()
   }
+
+  @Test func selectedPreparationKeepsOtherValidVectorsAndLeavesUnpreparedSourcesAlone() async throws {
+    let fixture = try QueryFixture(); defer { fixture.remove() }
+    try fixture.write("---\nid: selected\n---\n# Selected\nselected-only original quotation.\n")
+    let other = fixture.root.appendingPathComponent("notes/other.md")
+    try Data("---\nid: other\n---\n# Other\ntarget-evidence original quotation.\n".utf8).write(to: other)
+    let embedding = QueryEmbedding()
+    let engine = WikiKnowledgeQuery(workspace: fixture.workspace, embedding: embedding, relevance: QueryRelevance())
+    let otherAnswer = try await engine.answer("parallel tasks stop", documentID: "other", useSemantic: true)
+    let otherSource = try #require(otherAnswer.evidence.first?.source.id)
+    let otherRecord = try #require(try await fixture.workspace.projection.knowledgeDocuments().first { $0.id == otherSource })
+    let otherRows = try await fixture.workspace.projection.knowledgeBlockPage(sourceIDs: [otherSource])
+    #expect(!otherRows.isEmpty && otherRows.allSatisfy { $0.block.vectorJSON != nil })
+    let generatedPassages = await embedding.passageCount()
+
+    // These bytes enter the inventory, but preparing a different document must
+    // not parse them or index the unselected owner note as a side effect.
+    try FileManager.default.createDirectory(at: fixture.root.appendingPathComponent("attachments"), withIntermediateDirectories: true)
+    try Data("not a PDF".utf8).write(to: fixture.root.appendingPathComponent("attachments/unprepared.pdf"))
+    try Data("---\nid: unprepared\n---\n# Unprepared\n[PDF](../attachments/unprepared.pdf)\n".utf8)
+      .write(to: fixture.root.appendingPathComponent("notes/unprepared.md"))
+
+    let selected = try await engine.answer("selected-only", documentID: "selected")
+    let selectedSource = try #require(selected.evidence.first?.source.id)
+    #expect(selected.evidence.allSatisfy { $0.source.documentID == "selected" })
+    #expect(selected.coverage.complete && selected.coverage.sourceCount == 1 && selected.coverage.blockCount == 1)
+    let records = try await fixture.workspace.projection.knowledgeDocuments()
+    #expect(Set(records.map(\.id)) == [selectedSource, otherSource])
+    #expect(records.first { $0.id == otherSource } == otherRecord)
+    #expect(try await fixture.workspace.projection.knowledgeBlockPage(sourceIDs: [otherSource]) == otherRows)
+    #expect(await embedding.passageCount() == generatedPassages)
+    await fixture.workspace.close()
+  }
+
+  @Test func missingDocumentIsRejectedBeforeAnyKnowledgeSourceIsPrepared() async throws {
+    let fixture = try QueryFixture(); defer { fixture.remove() }
+    try fixture.write("---\nid: existing\n---\n# Existing\nOriginal quotation.\n")
+    let engine = WikiKnowledgeQuery(workspace: fixture.workspace)
+    await #expect(throws: WikiError.self) { try await engine.answer("Original", documentID: "missing") }
+    #expect(try await fixture.workspace.projection.knowledgeDocuments().isEmpty)
+    #expect(try await fixture.workspace.projection.knowledgeBlockCount() == 0)
+    await fixture.workspace.close()
+  }
+
+  @Test func failedSelectedSourceDoesNotAuthorizeItsOldCacheOrCoverage() async throws {
+    let fixture = try QueryFixture(); defer { fixture.remove() }
+    try fixture.write("---\nid: owner\n---\n# Owner\n[PDF](../attachments/source.pdf)\n")
+    try FileManager.default.createDirectory(at: fixture.root.appendingPathComponent("attachments"), withIntermediateDirectories: true)
+    try Data("not a PDF".utf8).write(to: fixture.root.appendingPathComponent("attachments/source.pdf"))
+    let inventory = try await fixture.workspace.knowledgeInventory()
+    let pdf = try #require(inventory.sources.first { $0.kind == .pdf })
+    // A stale extraction may remain on disk after a source replacement. Failure
+    // to prepare the current source must not fall back to those previous rows.
+    let old = WikiKnowledgeDocumentRecord(id: pdf.id, revision: "previous-source-revision", producer: "previous-producer", payload: "{}")
+    let oldBlock = WikiKnowledgeBlockRecord(id: "old-pdf-block", sourceID: pdf.id, ordinal: 0,
+      text: "stale-only-evidence", payload: "{}")
+    try await fixture.workspace.projection.replaceKnowledgeDocument(old, blocks: [oldBlock])
+    let engine = WikiKnowledgeQuery(workspace: fixture.workspace)
+    let answer = try await engine.answer("stale-only-evidence", documentID: "owner")
+    #expect(answer.evidence.isEmpty)
+    #expect(!answer.coverage.complete && !answer.coverage.diagnostics.isEmpty)
+    #expect(answer.coverage.sourceCount == 1 && answer.coverage.blockCount == 1)
+    #expect(try await fixture.workspace.projection.knowledgeBlockCount(sourceIDs: [pdf.id]) == 0)
+    #expect(try await fixture.workspace.projection.knowledgeDocuments().allSatisfy { $0.id != pdf.id })
+    await fixture.workspace.close()
+  }
 }
 
 private actor QueryEmbedding: WikiSemanticEmbedding {

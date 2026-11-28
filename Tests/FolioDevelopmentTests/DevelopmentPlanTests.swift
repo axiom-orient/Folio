@@ -2,16 +2,20 @@ import Foundation
 import Testing
 @testable import FolioDevelopment
 
-@Test func localSimulatorBuildCannotAcquireSigningOrProvisioningEffects() throws {
+@Test func localSimulatorBuildUsesAdHocSigningWithoutTeamProvisioningOrDeviceEffects() throws {
   let fixture = try DevelopmentFixture()
   defer { fixture.cleanup() }
   let request = try fixture.request(["ios", "--local-simulator"])
   let commands = DevelopmentPlan(request).commands
   let build = try #require(commands.first { $0.executable == "/usr/bin/xcodebuild" })
   #expect(build.arguments.contains("generic/platform=iOS Simulator"))
-  #expect(build.arguments.contains("CODE_SIGNING_ALLOWED=NO"))
+  #expect(build.arguments.contains("CODE_SIGNING_ALLOWED=YES"))
+  #expect(build.arguments.contains("CODE_SIGN_IDENTITY=-"))
+  #expect(build.arguments.filter { $0.hasPrefix("DEVELOPMENT_TEAM=") } == ["DEVELOPMENT_TEAM="])
+  #expect(!build.arguments.contains("CODE_SIGNING_ALLOWED=NO"))
   #expect(build.arguments.contains("FOLIO_IOS_INFO_PLIST=Apps/IOSLocalInfo.plist"))
   #expect(!build.arguments.contains("-allowProvisioningUpdates"))
+  #expect(!build.arguments.contains("-allowProvisioningDeviceRegistration"))
   #expect(!commands.contains { $0.arguments.contains("devicectl") })
 }
 

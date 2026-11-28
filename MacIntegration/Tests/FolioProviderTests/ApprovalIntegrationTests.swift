@@ -152,3 +152,116 @@ import Testing
   #expect(try JSONDecoder().decode(WikiRelationProposalStatus.self, from: Data(history.json.utf8)).state == .accepted)
   await reopened.close(); await workspace.close()
 }
+
+@Test func providerKnowledgeLookupReturnsOriginalQuotesAndRejectsUnknownFields() async throws {
+  let directory = FileManager.default.temporaryDirectory.appendingPathComponent("FolioKnowledgeCapability-\(UUID())")
+  defer { try? FileManager.default.removeItem(at: directory) }
+  let root = directory.appendingPathComponent("source")
+  try WikiWorkspace.create(at: root, name: "Knowledge capability")
+  let file = root.appendingPathComponent("notes/source.md")
+  let original = Data("---\nid: source\n---\n# Source\nFictional material factor equals seven under condition Z.\n".utf8)
+  try original.write(to: file)
+  let workspace = try WikiWorkspace(root: root, localStateDirectory: directory.appendingPathComponent("state"))
+  let provider = WikiCapabilityProvider(service: WikiSearchService(workspace: workspace, workspaceID: workspace.workspaceID))
+  let result = try await provider.read(capabilityID: "wiki.knowledge_search",
+    inputJSON: #"{"question":"Fictional","document_id":"source"}"#, operationID: UUID())
+  let answer = try JSONDecoder().decode(WikiKnowledgeAnswer.self, from: Data(result.json.utf8))
+  let evidence = try #require(answer.evidence.first)
+  #expect(!answer.semanticUsed && answer.evidence.count == 1)
+  #expect(evidence.source.documentID == "source" && evidence.text.contains("condition Z"))
+  struct EvidenceInput: Encodable { let evidence: WikiKnowledgeEvidence }
+  let evidenceInput = String(decoding: try JSONEncoder().encode(EvidenceInput(evidence: evidence)), as: UTF8.self)
+  let read = try await provider.read(capabilityID: "wiki.read_knowledge_evidence", inputJSON: evidenceInput, operationID: UUID())
+  #expect(try JSONDecoder().decode(WikiKnowledgeEvidence.self, from: Data(read.json.utf8)) == evidence)
+  for (capability, input) in [
+    ("wiki.knowledge_search", #"{"question":"Fictional","unexpected":true}"#),
+    ("wiki.concept", #"{"concept_id":"factor","unexpected":true}"#),
+    ("wiki.concept_operation", "{\"operation_id\":\"\(UUID())\",\"unexpected\":true}"),
+    ("wiki.read_knowledge_evidence", String(evidenceInput.dropLast()) + ",\"unexpected\":true}")
+  ] {
+    await #expect(throws: (any Error).self) {
+      try await provider.read(capabilityID: capability, inputJSON: input, operationID: UUID())
+    }
+  }
+  await #expect(throws: (any Error).self) {
+    try await provider.prepare(capabilityID: "wiki.save_concept",
+      inputJSON: #"{"concept":{},"unexpected":true}"#, operationID: UUID())
+  }
+  #expect(try Data(contentsOf: file) == original)
+  try Data("---\nid: source\n---\n# Changed\nDifferent original.\n".utf8).write(to: file)
+  await #expect(throws: WikiError.changedSource) {
+    try await provider.read(capabilityID: "wiki.read_knowledge_evidence", inputJSON: evidenceInput, operationID: UUID())
+  }
+  await workspace.close()
+}
+
+@Test @MainActor func conceptSaveUsesSEMIAuthorityAndSeparatesCommitFromCurrentEvidence() async throws {
+  let directory = FileManager.default.temporaryDirectory.appendingPathComponent("FolioConceptCapability-\(UUID())")
+  defer { try? FileManager.default.removeItem(at: directory) }
+  let root = directory.appendingPathComponent("source")
+  try WikiWorkspace.create(at: root, name: "Concept capability")
+  let sourceFile = root.appendingPathComponent("notes/source.md")
+  let original = Data("---\nid: source\n---\n# Source\nFictional material factor equals seven under condition Z.\n".utf8)
+  try original.write(to: sourceFile)
+  let workspace = try WikiWorkspace(root: root, localStateDirectory: directory.appendingPathComponent("state"))
+  let service = WikiSearchService(workspace: workspace, workspaceID: workspace.workspaceID)
+  let evidence = try #require(try await service.knowledgeAnswer("Fictional").evidence.first)
+  let concept = WikiKnowledgeConcept(id: "factor", domain: "fictional fixture",
+    labels: [WikiConceptLabel(language: "ko", preferred: "가상 물성 계수"),
+      WikiConceptLabel(language: "en", preferred: "fictional material factor")],
+    mentions: [WikiKnowledgeConceptMention(evidence: evidence, isDefinition: true)])
+  let provider = WikiCapabilityProvider(service: service)
+  let registry = ControlPlaneRegistry()
+  _ = try await registry.register(provider.registration(bundleIdentifier: "com.axient.Folio"), provider: provider)
+  let automation = ControlPlaneAutomation(registry: registry)
+  let authority = ControlAuthority(automation: automation)
+  let run = UUID(); try authority.beginIntent(run)
+  let command = try #require(try await automation.commands().first { $0.id.hasSuffix("/wiki.save_concept") })
+  struct Input: Encodable { let concept: WikiKnowledgeConcept }
+  let input = String(decoding: try JSONEncoder().encode(Input(concept: concept)), as: UTF8.self)
+  let access = try authority.accessRequest(command: command, inputJSON: input, intentRevision: run, destination: nil)
+  let accessRequest = access.presentation()
+  try authority.presentConsent(accessRequest, access: access)
+  let consent = try #require(try authority.resolveConsent(id: accessRequest.id, approved: true))
+  try authority.authorizeAccess(access, consent: consent)
+  let candidate = try await authority.prepare(command: command, inputJSON: access.inputJSON, intentRevision: run)
+  let conceptFile = root.appendingPathComponent("notes/factor.md")
+  #expect(!FileManager.default.fileExists(atPath: conceptFile.path))
+  #expect(try Data(contentsOf: sourceFile) == original)
+  let denied = ApprovalRequest(runID: run, purpose: .mutation(command: command.id), title: "Cancel", details: candidate.plan.previewJSON)
+  try authority.presentConsent(denied)
+  #expect(try authority.resolveConsent(id: denied.id, approved: false) == nil)
+  #expect(!FileManager.default.fileExists(atPath: conceptFile.path))
+  let request = ApprovalRequest(runID: run, purpose: .mutation(command: command.id), title: "Save reviewed concept", details: candidate.plan.previewJSON)
+  try authority.presentConsent(request)
+  let decision = try #require(try authority.resolveConsent(id: request.id, approved: true))
+  let approved = try authority.approve(candidate, consent: decision)
+  let result = try await authority.execute(approved)
+  let receipt = try JSONDecoder().decode(WikiWriteReceipt.self, from: Data(result.json.utf8))
+  #expect(result.succeeded && FileManager.default.fileExists(atPath: conceptFile.path))
+  #expect(receipt.idempotencyKeySHA256 == SourceDigest.sha256(approved.approval.approvalID.uuidString))
+  #expect(try Data(contentsOf: sourceFile) == original)
+
+  struct ConceptResult: Decodable { let concept: WikiKnowledgeConcept; let currentness: String; let atomicSnapshot: Bool }
+  let direct = try await provider.read(capabilityID: "wiki.concept", inputJSON: #"{"concept_id":"factor"}"#, operationID: UUID())
+  let stored = try JSONDecoder().decode(ConceptResult.self, from: Data(direct.json.utf8))
+  #expect(stored.concept == concept && stored.currentness == "current" && !stored.atomicSnapshot)
+  let lookup = try await provider.read(capabilityID: "wiki.knowledge_search",
+    inputJSON: #"{"question":"가상 물성 계수"}"#, operationID: UUID())
+  let answer = try JSONDecoder().decode(WikiKnowledgeAnswer.self, from: Data(lookup.json.utf8))
+  #expect(answer.evidence.contains(evidence) && !answer.semanticUsed)
+  let operationInput = "{\"operation_id\":\"\(receipt.operationID)\"}"
+  struct OperationResult: Decodable { let operation: WikiOperationStatus; let sourceObserved: Bool; let currentness: String }
+  let observed = try await provider.read(capabilityID: "wiki.concept_operation", inputJSON: operationInput, operationID: UUID())
+  let committed = try JSONDecoder().decode(OperationResult.self, from: Data(observed.json.utf8))
+  #expect(committed.operation.state == .committed && committed.sourceObserved && committed.currentness == "current")
+  try Data("---\nid: source\n---\n# Changed\nDifferent original.\n".utf8).write(to: sourceFile)
+  let afterChange = try await provider.read(capabilityID: "wiki.concept_operation", inputJSON: operationInput, operationID: UUID())
+  let historical = try JSONDecoder().decode(OperationResult.self, from: Data(afterChange.json.utf8))
+  #expect(historical.operation.state == .committed && historical.sourceObserved && historical.currentness == "changed")
+  await #expect(throws: WikiError.changedSource) {
+    try await provider.read(capabilityID: "wiki.concept", inputJSON: #"{"concept_id":"factor"}"#, operationID: UUID())
+  }
+  await #expect(throws: (any Error).self) { try await authority.execute(approved) }
+  await workspace.close()
+}

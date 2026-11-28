@@ -1,5 +1,6 @@
 import Foundation
 import FolioKnowledge
+import FolioKnowledgeApple
 import SwiftUI
 
 /// Renders the selected document while its window continues to own navigation.
@@ -34,7 +35,7 @@ struct WikiDocumentReaderView: View {
           if let draft, draft.isDirty, draft.revision != document.revision {
             WikiStaleDraftBanner(onReview: onReview)
           }
-          if let pdf = FolioAttachmentNotes.originalPDF(in: document) {
+          if let pdf = WikiAttachmentImport.unmodifiedPDFPath(in: document) {
             Button {
               Task { await model.previewAttachment(path: pdf) }
             } label: {

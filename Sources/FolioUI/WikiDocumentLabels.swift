@@ -1,4 +1,5 @@
 import FolioKnowledge
+import FolioKnowledgeApple
 import SwiftUI
 
 struct WikiDocumentLabel: View {
@@ -34,13 +35,10 @@ struct WikiDocumentLabel: View {
   }
   private var supportingColor: Color { isSelected ? FolioTheme.text(scheme) : FolioTheme.muted(scheme) }
   private var preview: String {
-    if FolioAttachmentNotes.originalPDF(in: document) != nil { return "PDF" }
+    if WikiAttachmentImport.unmodifiedPDFPath(in: document) != nil { return "PDF" }
     let line = document.sections.lazy.flatMap { $0.sourceText.components(separatedBy: "\n") }
-      .map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
-      .first { !$0.isEmpty && !$0.hasPrefix("#") && !$0.hasPrefix("```") && !$0.hasPrefix("|")
-        && !$0.hasPrefix("확인일:") && $0 != "---" } ?? ""
-    let bounded = String(line.prefix(240))
-    let text = FolioReadingExcerpt.plain(bounded)
+      .compactMap(FolioReadingExcerpt.documentLine).first { $0 != document.title } ?? ""
+    let text = line
     guard let sentenceEnd = text.range(of: #"[.!?。！？](?:\s|$)"#, options: .regularExpression) else { return text }
     return String(text[..<text.index(after: sentenceEnd.lowerBound)])
   }
@@ -62,6 +60,15 @@ func folioDuplicateDocumentTitles(_ documents: [WikiDocument]) -> Set<String> {
 
 /// A bounded summary is secondary to the complete document, never its source.
 enum FolioReadingExcerpt {
+  static func documentLine(_ source: String) -> String? {
+    var line = source.trimmingCharacters(in: .whitespacesAndNewlines)
+    while line.hasPrefix("> ") { line = String(line.dropFirst(2)).trimmingCharacters(in: .whitespaces) }
+    let text = plain(String(line.prefix(240)))
+    guard !text.isEmpty, !text.hasPrefix("#"), !text.hasPrefix("```"), !text.hasPrefix("|"),
+      !text.hasPrefix("확인일:"), text != "---", text != ">" else { return nil }
+    return text
+  }
+
   static func plain(_ text: String) -> String {
     guard text.contains(where: { "\\`*_[]!<>&~:".contains($0) }) else { return text }
     return (try? AttributedString(markdown: text, options: .init(interpretedSyntax: .inlineOnlyPreservingWhitespace)))

@@ -18,7 +18,9 @@ struct WikiDocumentView: View {
   }
   @State private var discardTarget: (id: String, context: FolioDocumentContext, text: String)?
   @State private var sendSource: FolioSendSource?
-  @State private var knowledgeDocumentID: String?
+  @State private var assertionSelection: WikiKnowledgeAssertionReview?
+  @State private var showingAssertions = false
+  @State private var openingAssertion = false
   private var document: WikiDocument? { model.snapshot?.documents.first { $0.id == (documentID ?? window.selectedDocumentID) } }
   private var unavailableDocument: WikiDocument? {
     model.snapshot?.staleDocuments.first { $0.id == (documentID ?? window.selectedDocumentID) }
@@ -71,13 +73,18 @@ struct WikiDocumentView: View {
     }
     .background(FolioTheme.paper(scheme)).tint(FolioTheme.accent(scheme))
     .sheet(item: $sendSource) { WikiNearbyView(model: model, window: window, source: $0) }
-    .sheet(item: savedPDFSelection) { saved in
-      if canPresentSavedPDF(saved) {
-        FolioKnowledgePDFView(preview: saved.preview)
+    .sheet(item: savedCitationSelection) { saved in
+      if canPresentSavedCitation(saved) {
+        switch saved.content {
+        case .markdown(let source, let sectionID, let location):
+          FolioKnowledgeMarkdownView(document: source, sectionID: sectionID, location: location)
+        case .pdf(let preview):
+          FolioKnowledgePDFView(preview: preview)
+        }
       }
     }
-    .onChange(of: model.workspaceGeneration) { _, _ in window.savedPDF = nil }
-    .onChange(of: model.hasOpenWorkspace) { _, open in if !open { window.savedPDF = nil } }
+    .onChange(of: model.workspaceGeneration) { _, _ in window.savedCitation = nil }
+    .onChange(of: model.hasOpenWorkspace) { _, open in if !open { window.savedCitation = nil } }
     .sheet(isPresented: $window.showConnections) {
       if let document {
         NavigationStack {
@@ -97,11 +104,19 @@ struct WikiDocumentView: View {
         model.reviewSource(captured.document, in: window, context: context)
       }
     }
-    .sheet(isPresented: Binding(get: { knowledgeDocumentID != nil }, set: { if !$0 { knowledgeDocumentID = nil } })) {
-      if let knowledgeDocumentID {
-        FolioKnowledgeQueryView(model: model, window: window, documentID: knowledgeDocumentID)
+    .sheet(isPresented: $showingAssertions) {
+      if let document {
+        FolioKnowledgeAssertionsView(model: model,
+          documentID: knowledgeRole == nil ? document.id : nil,
+          conceptID: knowledgeRole == "concept" ? document.id : nil)
       }
     }
+    .sheet(isPresented: Binding(get: { assertionSelection != nil }, set: { if !$0 { assertionSelection = nil } })) {
+      if let review = assertionSelection, let focus = review.record.assertion.allEvidence.first {
+        FolioKnowledgeAssertionView(model: model, focus: focus, existing: review.record, review: review)
+      }
+    }
+    .onChange(of: model.workspaceGeneration) { _, _ in assertionSelection = nil; showingAssertions = false }
     .confirmationDialog("편집을 취소할까요?", isPresented: Binding(
       get: { discardTarget != nil }, set: { if !$0 { discardTarget = nil } }),
       titleVisibility: .visible, presenting: discardTarget) { target in
@@ -132,16 +147,16 @@ struct WikiDocumentView: View {
     }
   }
 
-  private var savedPDFSelection: Binding<WikiWindowState.SavedPDF?> {
+  private var savedCitationSelection: Binding<WikiWindowState.SavedCitation?> {
     Binding(get: {
-      guard let saved = window.savedPDF, canPresentSavedPDF(saved) else { return nil }
+      guard let saved = window.savedCitation, canPresentSavedCitation(saved) else { return nil }
       return saved
     }, set: { value in
-      if value == nil, window.savedPDF?.documentID == document?.id { window.savedPDF = nil }
+      if value == nil, window.savedCitation?.documentID == document?.id { window.savedCitation = nil }
     })
   }
 
-  private func canPresentSavedPDF(_ saved: WikiWindowState.SavedPDF) -> Bool {
+  private func canPresentSavedCitation(_ saved: WikiWindowState.SavedCitation) -> Bool {
     model.hasOpenWorkspace && model.workspaceGeneration == saved.workspaceGeneration
       && document?.id == saved.documentID && window.selectedDocumentID == saved.documentID
   }
@@ -185,10 +200,13 @@ struct WikiDocumentView: View {
           || document.map { model.savingDocuments.contains($0.id) } == true)
         .keyboardShortcut("s", modifiers: .command)
     } else {
-      Button(draft?.isDirty == true ? "편집 이어쓰기" : (document.flatMap(FolioAttachmentNotes.originalPDF(in:)) == nil ? "편집" : "노트 편집"),
-        systemImage: "pencil") { window.editorStartsAtEnd = false; window.isEditing = true }
+      Button(knowledgeRole == "assertion" ? "주장 수정" : draft?.isDirty == true ? "편집 이어쓰기" : (document.flatMap(WikiAttachmentImport.unmodifiedPDFPath(in:)) == nil ? "편집" : "노트 편집"),
+        systemImage: "pencil") {
+        if knowledgeRole == "assertion" { openAssertionEditor() }
+        else { window.editorStartsAtEnd = false; window.isEditing = true }
+      }
         .labelStyle(.titleOnly)
-        .disabled(!model.hasOpenWorkspace || draft == nil)
+        .disabled(!model.hasOpenWorkspace || draft == nil || openingAssertion)
         .accessibilityIdentifier("document-edit")
     }
   }
@@ -216,16 +234,29 @@ struct WikiDocumentView: View {
           .accessibilityIdentifier("미리 보기")
           .keyboardShortcut(.escape, modifiers: [])
       } else if let document {
-        Button("이 자료에 질문", systemImage: "text.bubble") { knowledgeDocumentID = document.id }
-          .disabled(!model.hasOpenWorkspace).accessibilityIdentifier("knowledge-document-open")
+        Button("저장한 주장", systemImage: "text.book.closed") { showingAssertions = true }
+          .disabled(!model.hasOpenWorkspace).accessibilityIdentifier("document-saved-assertions")
+        if !isDerivedKnowledgeNote {
+          Button("이 자료에 질문", systemImage: "text.bubble") {
+            guard let context = model.documentContext else { return }
+            window.knowledgeRequest = .init(documentID: document.id, initialQuestion: "",
+              context: context, workspaceGeneration: model.workspaceGeneration)
+          }
+            .disabled(!model.hasOpenWorkspace).accessibilityIdentifier("knowledge-document-open")
+        }
         Button("연결된 문서", systemImage: "link") { window.showConnections = true }
-        if FolioAttachmentNotes.originalPDF(in: document) == nil { attachmentMenu(for: document) }
+        if WikiAttachmentImport.unmodifiedPDFPath(in: document) == nil { attachmentMenu(for: document) }
       }
       if let document {
         Button("문서 정보", systemImage: "info.circle") { showInformation(for: document) }
       }
       Divider()
       if !window.isEditing, let document, let context = model.documentContext {
+        if knowledgeRole == "assertion" {
+          Button("텍스트 직접 편집", systemImage: "text.cursor") {
+            window.editorStartsAtEnd = false; window.isEditing = true
+          }.disabled(!model.hasOpenWorkspace || draft == nil)
+        }
         Button("제목·태그 편집…", systemImage: "tag") { window.metadataSelection = .init(document: document, context: context) }
       }
       documentShare
@@ -247,6 +278,35 @@ struct WikiDocumentView: View {
     }
     .labelStyle(.iconOnly)
     .menuStyle(.borderlessButton)
+  }
+
+  private var knowledgeRole: String? {
+    guard let text = draft?.text else { return nil }
+    return (try? WikiOntologyRecord.read(bytes: Data(text.utf8)))?.role
+  }
+
+  private var isDerivedKnowledgeNote: Bool {
+    guard let text = draft?.text else { return true }
+    return (try? WikiMarkdownParser.isDerivedKnowledgeNote(bytes: Data(text.utf8))) ?? true
+  }
+
+  private func openAssertionEditor() {
+    guard !openingAssertion, let document, let workspace = model.workspace, model.hasOpenWorkspace else { return }
+    let generation = model.workspaceGeneration
+    openingAssertion = true
+    Task { @MainActor in
+      defer { openingAssertion = false }
+      do {
+        let review = try await workspace.reviewKnowledgeAssertion(id: document.id)
+        guard generation == model.workspaceGeneration, model.hasOpenWorkspace,
+          self.document?.id == document.id, review.record.revision == document.revision else { return }
+        assertionSelection = review
+      } catch {
+        if generation == model.workspaceGeneration {
+          model.message = folioAssertionReviewMessage(error)
+        }
+      }
+    }
   }
 
   @ViewBuilder private func attachmentMenu(for document: WikiDocument) -> some View {

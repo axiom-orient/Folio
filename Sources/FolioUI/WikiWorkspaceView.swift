@@ -2,7 +2,7 @@ import SwiftUI
 
 struct WikiWorkspaceView: View {
   enum Action {
-    case importDocument, attachment, sendFile, sendArchive, ontology, refresh, rebuildSearch, publish
+    case attachment, sendFile, sendArchive, ontology, refresh, rebuildSearch, publish
     #if os(iOS)
     case photo
     #endif
@@ -24,7 +24,6 @@ struct WikiWorkspaceView: View {
         }
       }
       Section("추가") {
-        actionRow("문서 가져오기…", icon: "doc.badge.plus", action: .importDocument)
         actionRow("파일 첨부…", icon: "paperclip", action: .attachment)
         #if os(iOS)
         actionRow("사진 추가", icon: "photo", action: .photo).disabled(isAddingPhoto)
@@ -43,6 +42,12 @@ struct WikiWorkspaceView: View {
           actionRow("연결 규칙", icon: "link", action: .ontology)
           Button("새로고침") { action(.refresh) }
           Button("검색 다시 준비") { action(.rebuildSearch) }
+          if let diagnostic = model.session.systemIndexDiagnostic {
+            DisclosureGroup("시스템 검색 진단") {
+              Text("앱 안에서는 일반 검색을 사용할 수 있습니다.").font(.callout)
+              Text(diagnostic).font(.caption).foregroundStyle(.secondary).textSelection(.enabled)
+            }
+          }
           #if os(macOS)
           Button("Finder에서 원문 폴더 보기") { action(.reveal) }
           Button("폴더에 새 자료함 만들기…") { action(.createFolder) }

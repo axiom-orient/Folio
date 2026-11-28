@@ -46,6 +46,6 @@ Acornry 내부의 `AcornryNearby`는 연결·handshake·작업 예약·중지와
 
 송신 화면의 `FolioSendPreparation`은 원문 내보내기에서 준비한 임시 사본과 오류·준비 상태를 소유한다. 준비는 화면 Task의 취소를 따르고, 화면이 닫히면 남은 사본을 정리한다. 전송 모델이 보내기를 수락한 경우에만 사본을 인계하며, 이후 정리는 전송 작업이 담당한다.
 
-실제 실행 범위는 [Current](IMPLEMENTATION_STATUS.md)를 따른다. Acornry는 전송·수신 bytes·delivery receipt를, KnowledgeKit은 위키 source/CAS·원문 receipt를 소유한다.
+실제 실행 범위는 [Current](RELEASE.md#검증-범위)를 따른다. Acornry는 전송·수신 bytes·delivery receipt를, KnowledgeKit은 위키 source/CAS·원문 receipt를 소유한다.
 
 Apple 근거: [최초 잠금 해제까지의 파일 보호](https://developer.apple.com/documentation/foundation/fileprotectiontype/completeuntilfirstuserauthentication), [기본 Data Protection Class C](https://support.apple.com/guide/security/secb010e978a/web), [synchronizable Keychain](https://developer.apple.com/documentation/security/ksecattrsynchronizable), [로컬 네트워크 접근](https://developer.apple.com/documentation/technotes/tn3179-understanding-local-network-privacy).

@@ -78,8 +78,8 @@ public actor WikiSearchService {
   public func prepareKnowledgeIndex() async throws -> WikiKnowledgeCoverage { try await knowledge.prepare() }
 
   public func knowledgeAnswer(_ question: String, documentID: String? = nil,
-    useSemantic: Bool = false) async throws -> WikiKnowledgeAnswer {
-    try await knowledge.answer(question, documentID: documentID, useSemantic: useSemantic)
+    useSemantic: Bool = false, conceptID: String? = nil) async throws -> WikiKnowledgeAnswer {
+    try await knowledge.answer(question, documentID: documentID, useSemantic: useSemantic, conceptID: conceptID)
   }
 
   public func releaseKnowledgeResources() async { await knowledge.releaseResources() }

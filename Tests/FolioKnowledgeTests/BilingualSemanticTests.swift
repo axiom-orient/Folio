@@ -14,6 +14,8 @@ struct BilingualSemanticTests {
       for (path, digest) in manifest.files {
         #expect(SourceDigest.sha256(try Data(contentsOf: root.appendingPathComponent(path))) == digest)
       }
+      #expect(!FileManager.default.fileExists(atPath: root.appendingPathComponent("tokenizer.json").path))
+      #expect(!FileManager.default.fileExists(atPath: root.appendingPathComponent("tokenizer_config.json").path))
     }
     let root = roots[0]
     let tokenizer = try JSONDecoder().decode(Manifest.self, from: Data(contentsOf: root.appendingPathComponent("TOKENIZER_SOURCE.json")))

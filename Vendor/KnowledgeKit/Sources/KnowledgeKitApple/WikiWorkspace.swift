@@ -287,8 +287,8 @@ public actor WikiWorkspace {
     return try await execute(plan, idempotencyKey: nil, checkingEvidence: evidence)
   }
 
-  private func execute(_ plan: WikiPreparedEdit, idempotencyKey: String?,
-    checkingEvidence: [WikiKnowledgeEvidence]
+  func execute(_ plan: WikiPreparedEdit, idempotencyKey: String?,
+    checkingEvidence: [WikiKnowledgeEvidence], checkingConcepts: [String: WikiKnowledgeConceptBinding] = [:]
   ) async throws -> WikiWriteReceipt {
     try requireOpen()
     if let idempotencyKey {
@@ -319,6 +319,7 @@ public actor WikiWorkspace {
       _ = try readKnowledgeEvidence(checkingEvidence)
       try Task.checkCancellation()
     }
+    try validateKnowledgeConceptBindings(checkingConcepts)
     struct Intent: Encodable {
       let operationID: UUID; let workspaceID: UUID; let workspaceRevision: String
       let relativePath: String; let expectedRevision: String?; let resultRevision: String

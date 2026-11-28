@@ -110,16 +110,11 @@ enum FolioKnowledgeNote {
     let provenance = Provenance(question: answer.question, checkedAt: answer.checkedAt,
       sourceCheckStartedAt: sourceCheckStartedAt, sourceCheckFinishedAt: sourceCheckFinishedAt,
       atomicSnapshot: answer.atomicSnapshot, evidence: answer.evidence.map {
-        Provenance.Item(evidence: $0, producer: $0.source.kind == .pdf ? WikiPDFExtractor.identifier : nil)
+        Provenance.Item(evidence: $0, producer: $0.pdfRegion?.producer ?? ($0.source.kind == .pdf ? WikiPDFExtractor.identifier : nil))
       })
     let encoder = JSONEncoder(); encoder.outputFormatting = .sortedKeys; encoder.dateEncodingStrategy = .iso8601
-    // YAML recognizes these Unicode separators as line breaks inside a quoted
-    // scalar. Keep them JSON-escaped so metadata preserves the exact quote.
-    let json = String(decoding: try encoder.encode(provenance), as: UTF8.self)
-      .replacingOccurrences(of: "\u{85}", with: "\\u0085")
-      .replacingOccurrences(of: "\u{2028}", with: "\\u2028")
-      .replacingOccurrences(of: "\u{2029}", with: "\\u2029")
-    let frontmatter = "folio_knowledge_note: true\nfolio_knowledge_provenance: '" + json.replacingOccurrences(of: "'", with: "''") + "'\n"
+    let scalar = try WikiMarkdownEditor.jsonMetadataScalar(encoder.encode(provenance))
+    let frontmatter = "folio_knowledge_note: true\nfolio_knowledge_provenance: " + scalar + "\n"
     let placeholderID = "00000000-0000-0000-0000-000000000000"
     guard ("---\nid: " + placeholderID + "\n" + frontmatter + "---\n").utf8.count <= 65_536 else {
       throw WikiError.invalidSource("근거의 출처 정보가 저장 가능한 크기를 넘습니다. 근거 수를 줄여 저장해 주세요.")
@@ -132,16 +127,7 @@ enum FolioKnowledgeNote {
     }
     var parts = ["## 질문\n\n" + WikiMarkdownEditor.literalInline(answer.question)]
     for evidence in answer.evidence {
-      let label = WikiMarkdownEditor.literalInline(evidence.source.title + " · " + evidence.displayLocation)
-      var allowed = CharacterSet.urlPathAllowed
-      allowed.remove(charactersIn: "#?%()[]<>")
-      let path = "../" + (evidence.source.relativePath.addingPercentEncoding(withAllowedCharacters: allowed) ?? evidence.source.relativePath)
-      let fragment: String
-      if case .pdf(let pageIndex, _, _, _, _) = evidence.location { fragment = "#page=\(pageIndex + 1)" }
-      else { fragment = "" }
-      let quote = evidence.text.split(omittingEmptySubsequences: false, whereSeparator: \.isNewline)
-        .map { "> " + WikiMarkdownEditor.literalInline(String($0)) }.joined(separator: "\n")
-      parts.append("## [" + label + "](" + path + fragment + ")\n\n" + quote)
+      parts.append(try evidence.savedCitationMarkdown(from: "notes/saved.md"))
     }
     let body = parts.joined(separator: "\n\n") + "\n"
     guard FolioInput.documentSource(id: placeholderID, title: title, body: body,
@@ -149,5 +135,124 @@ enum FolioKnowledgeNote {
       throw WikiError.invalidSource("근거 노트가 저장 가능한 크기를 넘습니다. 근거 수를 줄여 저장해 주세요.")
     }
     return Content(title: title, body: body, frontmatter: frontmatter)
+  }
+}
+
+extension WikiAppModel {
+  @discardableResult func saveKnowledgeConcept(name: String, aliases: [String], domain: String,
+    evidence: WikiKnowledgeEvidence, existing: WikiKnowledgeConceptRecord? = nil) async -> Bool {
+    let identity: String
+    do { identity = "concept:" + SourceDigest.sha256(try JSONEncoder().encode([name, domain, existing?.concept.id ?? ""] + aliases)) }
+    catch { message = error.localizedDescription; return false }
+    let label: WikiConceptLabel
+    if let current = existing?.concept.labels.first {
+      label = .init(language: current.language, preferred: current.preferred,
+        aliases: Array(Set([name] + aliases)).filter { $0 != current.preferred }.sorted())
+    } else { label = .init(language: "und", preferred: name, aliases: aliases) }
+    let concept = WikiKnowledgeConcept(id: existing?.concept.id ?? UUID().uuidString.lowercased(), domain: domain,
+      labels: [label], mentions: [.init(evidence: evidence)])
+    return await saveKnowledgeRecord(identity: identity, evidence: [evidence], prepare: { workspace in
+      if existing == nil {
+        let inventory = try await workspace.knowledgeConceptInventory()
+        let names = Set([name] + aliases)
+        if let identical = inventory.records.first(where: { record in
+          record.concept.state == .accepted && record.concept.domain == domain
+            && record.concept.labels.contains { Set([$0.preferred] + $0.aliases).isSuperset(of: names) }
+            && record.concept.mentions.contains { $0.evidence == evidence }
+        }) {
+          _ = try await workspace.readKnowledgeConcept(id: identical.concept.id)
+          return .existing
+        }
+      }
+      let plan = try await workspace.prepareKnowledgeConcept(concept, relativePath: existing?.relativePath,
+        expectedRevision: existing?.revision, operationID: UUID())
+      return .edit(id: concept.id, plan: plan)
+    }, execute: { workspace, plan in try await workspace.executeKnowledgeConcept(plan) })
+  }
+
+  @discardableResult func saveKnowledgeAssertion(_ assertion: WikiKnowledgeAssertion,
+    existing: WikiKnowledgeAssertionRecord? = nil, expectedConceptRevisions: [String: String]? = nil) async -> Bool {
+    do {
+      let digest = try assertion.contentDigest()
+      let identity = "assertion:" + (existing?.assertion.id ?? "new") + ":" + digest
+      return await saveKnowledgeRecord(identity: identity, evidence: assertion.allEvidence, prepare: { workspace in
+        if existing == nil {
+          if try await workspace.matchingKnowledgeAssertion(assertion) != nil { return .existing }
+        }
+        let plan = try await workspace.prepareKnowledgeAssertion(assertion, relativePath: existing?.relativePath,
+          expectedRevision: existing?.revision, expectedConceptRevisions: expectedConceptRevisions,
+          operationID: UUID())
+        return .edit(id: assertion.id, plan: plan)
+      }, execute: { workspace, plan in try await workspace.executeKnowledgeAssertion(plan) })
+    } catch { message = error.localizedDescription; return false }
+  }
+
+  private enum KnowledgePreparation {
+    case existing
+    case edit(id: String, plan: WikiPreparedEdit)
+  }
+
+  /// One UI submission owner for sourced records. Retrying observes the same operation before fresh reads.
+  private func saveKnowledgeRecord(identity: String, evidence: [WikiKnowledgeEvidence],
+    prepare: (WikiWorkspace) async throws -> KnowledgePreparation,
+    execute: (WikiWorkspace, WikiPreparedEdit) async throws -> WikiWriteReceipt
+  ) async -> Bool {
+    guard hasOpenWorkspace, let workspace, let recoveryScope = draftStore.recoveryScopeURL, !isBusy else { return false }
+    let key = FolioKnowledgeSaves.Key(root: workspace.root, workspaceID: workspace.workspaceID,
+      recoveryScope: recoveryScope, question: identity, evidence: evidence)
+    guard knowledgeSaves.working.insert(key).inserted else { return false }
+    let generation = workspaceGeneration
+    isBusy = true; message = nil
+    defer {
+      knowledgeSaves.working.remove(key)
+      if generation == workspaceGeneration { isBusy = false }
+    }
+    if let pending = knowledgeSaves.submissions[key] {
+      switch await pending.observe(in: workspace) {
+      case .committed:
+        knowledgeSaves.submissions.removeValue(forKey: key)
+        if generation == workspaceGeneration { await refresh() }
+        return generation == workspaceGeneration && hasOpenWorkspace
+      case .notObserved:
+        knowledgeSaves.submissions.removeValue(forKey: key)
+        if generation == workspaceGeneration { message = "이전 저장은 반영되지 않았습니다. 저장을 눌러 다시 시도해 주세요." }
+      case .uncertain(let diagnostic):
+        if generation == workspaceGeneration { message = "저장 결과를 확인하고 있습니다. " + diagnostic }
+      }
+      return false
+    }
+    do {
+      let prepared = try await prepare(workspace)
+      guard generation == workspaceGeneration, hasOpenWorkspace else { return false }
+      try Task.checkCancellation()
+      switch prepared {
+      case .existing: return true
+      case .edit(let id, let plan):
+        let submission = FolioSubmittedDocument(id: id, plan: plan, sourceRoot: workspace.root)
+        knowledgeSaves.submissions[key] = submission
+        do { _ = try await execute(workspace, plan) }
+        catch {
+          switch await submission.observe(in: workspace) {
+          case .committed: break
+          case .notObserved:
+            knowledgeSaves.submissions.removeValue(forKey: key)
+            throw error
+          case .uncertain(let diagnostic):
+            if generation == workspaceGeneration { message = "저장 결과를 확인하고 있습니다. " + diagnostic }
+            return false
+          }
+        }
+        knowledgeSaves.submissions[key] = nil
+        guard generation == workspaceGeneration, hasOpenWorkspace else { return false }
+        await refresh()
+        return generation == workspaceGeneration && hasOpenWorkspace
+      }
+    } catch {
+      if generation == workspaceGeneration {
+        message = (error as? WikiError) == .changedSource
+          ? "원문이나 연결한 개념이 바뀌었습니다. 근거를 다시 확인한 뒤 저장해 주세요." : error.localizedDescription
+      }
+      return false
+    }
   }
 }

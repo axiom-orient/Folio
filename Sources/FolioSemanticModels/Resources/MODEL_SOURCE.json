@@ -6,10 +6,12 @@
   "license": "MIT",
   "files": {
     "LICENSE-E5.txt": "904dc4d8749877f1dba1cda48200d2462dccbeb7c134d5e4ef6fa75e0198c8fe",
-    "tokenizer_config.json": "dbdcd9767f0481fd8fd8cd6bce3e73dae7f5c44ce22ae1fde00a66498e71b454",
-    "tokenizer.json": "cd98e5698b201ba914efb8c18b6709fa8735ab71dcad8d2b431e52e8bf68d932",
     "MultilingualE5Small.mlpackage/Manifest.json": "1016f22d417907f0485b050ad0b389a6f0bca9985fb853804773931061351317",
     "MultilingualE5Small.mlpackage/Data/com.apple.CoreML/model.mlmodel": "338370ce8c5102ac1373511290d5092b28beed8ed3a2b414476e2eba2c86b397",
     "MultilingualE5Small.mlpackage/Data/com.apple.CoreML/weights/weight.bin": "7397889b9a97ebb83004fab7380c403d7bd4fddb475a952923c3eb21151bf69f"
+  },
+  "referenceTokenizerFiles": {
+    "tokenizer.json": "cd98e5698b201ba914efb8c18b6709fa8735ab71dcad8d2b431e52e8bf68d932",
+    "tokenizer_config.json": "dbdcd9767f0481fd8fd8cd6bce3e73dae7f5c44ce22ae1fde00a66498e71b454"
   }
 }

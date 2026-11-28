@@ -60,4 +60,4 @@
 
 원문 반영과 검색 목록 갱신의 결과를 구분합니다. 확정 영수증은 작은 작업 기록으로 유지하고, 정상 완료 후 생성 당시의 파일 동일성과 내용을 확인해 임시 원문 사본을 정리합니다. 결과가 불확실한 작업의 기록과 복구용 사본은 보존하며 자동 재실행하지 않습니다.
 
-디렉터리의 자식 파일까지 조정하는 옵션과 이동 알림은 현재 SDK 계약을 따릅니다. [Apple 파일 조정](https://developer.apple.com/documentation/foundation/nsfilecoordinator), [디렉터리 이동 조정](https://developer.apple.com/documentation/foundation/nsfilecoordinator/writingoptions/formoving), [이동 후 file presenter 알림](https://developer.apple.com/documentation/foundation/nsfilecoordinator/item(at:didmoveto:)). 실제 실행 결과와 남은 환경 검증은 [검증 기록](IMPLEMENTATION_STATUS.md)에 명시합니다.
+디렉터리의 자식 파일까지 조정하는 옵션과 이동 알림은 현재 SDK 계약을 따릅니다. [Apple 파일 조정](https://developer.apple.com/documentation/foundation/nsfilecoordinator), [디렉터리 이동 조정](https://developer.apple.com/documentation/foundation/nsfilecoordinator/writingoptions/formoving), [이동 후 file presenter 알림](https://developer.apple.com/documentation/foundation/nsfilecoordinator/item(at:didmoveto:)). 실제 실행 결과와 남은 환경 검증은 [검증 기록](RELEASE.md#검증-범위)에 명시합니다.

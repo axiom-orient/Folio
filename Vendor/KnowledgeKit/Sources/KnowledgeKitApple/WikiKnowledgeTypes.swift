@@ -30,27 +30,48 @@ public struct WikiKnowledgeSource: Codable, Hashable, Sendable, Identifiable {
 public enum WikiKnowledgeLocation: Codable, Hashable, Sendable {
   /// Range is absolute in the original Markdown bytes, inside the referenced section.
   case markdown(reference: WikiEvidenceReference, range: WikiSourceRange)
-  /// Range is in the verbatim PDFKit page text, not in the binary PDF file.
+  /// Range is in the PDFKit page text or the representation named by `pdfRegion`.
   case pdf(pageIndex: Int, label: String, range: WikiSourceRange, pageSHA256: String, bounds: [WikiPDFBounds])
 }
 
-/// Exact source quotation. This is not a generated answer or a factual truth score.
+/// A localized reconstruction of part of an admitted PDF page.
+public struct WikiPDFEvidenceRegion: Codable, Hashable, Sendable {
+  public enum Kind: String, Codable, Hashable, Sendable { case layout, ocrUnreviewed }
+  public let kind: Kind
+  public let producer: String
+  public let groupIndex: Int
+  public let imageIndex: Int?
+
+  init(kind: Kind, groupIndex: Int, imageIndex: Int? = nil) {
+    self.kind = kind; self.groupIndex = groupIndex; self.imageIndex = imageIndex
+    let extractor = kind == .layout ? WikiPDFExtractor.identifier
+      : (imageIndex == nil ? WikiPDFOCR.identifier : WikiPDFOCR.regionalIdentifier)
+    self.producer = extractor + ".layout.v1"
+  }
+}
+
+/// Source-backed material with explicit provenance for machine-recognized text.
 public struct WikiKnowledgeEvidence: Codable, Hashable, Sendable, Identifiable {
   public let id: String
   public let text: String
   public let source: WikiKnowledgeSource
   public let location: WikiKnowledgeLocation
+  public let pdfRegion: WikiPDFEvidenceRegion?
 
-  public init(id: String, text: String, source: WikiKnowledgeSource, location: WikiKnowledgeLocation) {
+  public init(id: String, text: String, source: WikiKnowledgeSource, location: WikiKnowledgeLocation,
+    pdfRegion: WikiPDFEvidenceRegion? = nil) {
     self.id = id; self.text = text; self.source = source; self.location = location
+    self.pdfRegion = pdfRegion
   }
   public var markdownReference: WikiEvidenceReference? {
     if case .markdown(let reference, _) = location { reference } else { nil }
   }
   public var displayLocation: String {
     switch location {
-    case .markdown(_, let range): "\(range.startLine)–\(range.endLine)행"
-    case .pdf(let index, let label, _, _, _): label == String(index + 1) ? "\(label)쪽" : "\(label)쪽 (PDF \(index + 1)쪽)"
+    case .markdown(_, let range): return "\(range.startLine)–\(range.endLine)행"
+    case .pdf(let index, let label, _, _, _):
+      let page = label == String(index + 1) ? "\(label)쪽" : "\(label)쪽 (PDF \(index + 1)쪽)"
+      return pdfRegion?.kind == .ocrUnreviewed ? page + " · 스캔 인식" : page
     }
   }
 }
@@ -78,11 +99,13 @@ public struct WikiKnowledgeAnswer: Codable, Sendable {
   public let semanticUsed: Bool
   public let documentID: String?
   public let checkedAt: Date
+  public let concepts: WikiKnowledgeConceptResolution?
   public var atomicSnapshot: Bool { false }
   public init(question: String, evidence: [WikiKnowledgeEvidence], coverage: WikiKnowledgeCoverage,
-    semanticUsed: Bool, documentID: String? = nil) {
+    semanticUsed: Bool, documentID: String? = nil, concepts: WikiKnowledgeConceptResolution? = nil) {
     self.question = question; self.evidence = evidence; self.coverage = coverage; self.semanticUsed = semanticUsed
     self.documentID = documentID
+    self.concepts = concepts
     checkedAt = Date()
   }
 }
@@ -92,15 +115,22 @@ public struct WikiKnowledgePDFPreview: Sendable {
   public let pageIndex: Int
   public let label: String
   public let bounds: [WikiPDFBounds]
+  public let usesOCR: Bool
+
+  init(data: Data, pageIndex: Int, label: String, bounds: [WikiPDFBounds], usesOCR: Bool = false) {
+    self.data = data; self.pageIndex = pageIndex; self.label = label; self.bounds = bounds; self.usesOCR = usesOCR
+  }
 }
 
 public struct WikiKnowledgeInventory: Sendable {
   public let sources: [WikiKnowledgeSource]
   public let diagnostics: [String]
   public let fingerprint: String
+  let admittedDocumentIDs: Set<String>
 }
 
 public struct WikiKnowledgeMaterial: Sendable {
   public let evidence: [WikiKnowledgeEvidence]
   public let unreadablePages: Int
+  let recognitionFailed: Bool
 }

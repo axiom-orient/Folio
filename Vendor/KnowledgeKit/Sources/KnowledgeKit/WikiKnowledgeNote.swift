@@ -9,9 +9,10 @@ extension WikiMarkdownParser {
     return try isDerivedKnowledgeNote(fields["folio_knowledge_note"])
   }
 
-  package static func knowledgeNoteProvenance(bytes: Data) throws -> Data? {
+  package static func knowledgeNoteProvenance(bytes: Data, required: Bool = true) throws -> Data? {
     let fields = try Frontmatter.read(SourceText(bytes)).fields
     guard try isDerivedKnowledgeNote(fields["folio_knowledge_note"]) else { return nil }
+    if !required && fields["folio_knowledge_provenance"] == nil { return nil }
     guard let entry = fields["folio_knowledge_provenance"], entry.tag.rawValue == "tag:yaml.org,2002:str",
       let json = entry.scalar?.string else {
       throw WikiError.changedSource

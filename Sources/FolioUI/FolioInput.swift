@@ -1,6 +1,5 @@
 import Foundation
 import FolioKnowledge
-import Markdown
 
 enum FolioInput {
   static func name(_ raw: String) -> String? {
@@ -12,12 +11,6 @@ enum FolioInput {
 
   static func documentSource(id: String, title: String, body: String, additionalFrontmatter: String = "") -> String {
     "---\nid: \(id)\n" + additionalFrontmatter + "---\n\n" + WikiMarkdownEditor.literalHeading(title) + "\n\n" + body
-  }
-
-  static func attachmentSource(id: String, filename: String, link: String) -> String {
-    let title = filename.components(separatedBy: .newlines).joined(separator: " ")
-    return documentSource(id: id, title: title,
-      body: Paragraph(Link(destination: link, Markdown.Text(WikiMarkdownEditor.literalInline(title)))).format() + "\n")
   }
 
 }

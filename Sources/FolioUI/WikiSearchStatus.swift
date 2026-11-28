@@ -8,14 +8,15 @@ struct WikiSearchTools: View {
   var beforePresentation: () -> Void = {}
 
   @State private var showSemantic = false
-  @State private var showKnowledge = false
 
   var body: some View {
     VStack(alignment: .leading, spacing: 6) {
       HStack {
         Button {
+          guard let context = model.documentContext else { return }
           beforePresentation()
-          showKnowledge = true
+          window.knowledgeRequest = .init(documentID: nil, initialQuestion: window.query,
+            context: context, workspaceGeneration: model.workspaceGeneration)
         } label: {
           Label("PDF·노트 근거 찾기", systemImage: "text.bubble")
             .frame(minHeight: minimumControlHeight)
@@ -25,7 +26,7 @@ struct WikiSearchTools: View {
         .accessibilityIdentifier("knowledge-search-open")
         Spacer(minLength: 4)
         Menu {
-          Button("뜻으로 찾기", systemImage: "sparkle.magnifyingglass") {
+          Button("노트에서 뜻으로 찾기", systemImage: "sparkle.magnifyingglass") {
             beforePresentation()
             showSemantic = true
           }
@@ -56,9 +57,6 @@ struct WikiSearchTools: View {
       }
     }
     .frame(maxWidth: .infinity, alignment: .leading)
-    .sheet(isPresented: $showKnowledge) {
-      FolioKnowledgeQueryView(model: model, window: window, initialQuestion: window.query)
-    }
     .sheet(isPresented: $showSemantic) { FolioSemanticReviewView(model: model, window: window, document: nil) }
   }
 
